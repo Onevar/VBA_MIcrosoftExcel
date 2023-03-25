@@ -10,6 +10,7 @@ Dim qtyPendant      As Integer
 Dim qtyAFIC         As Integer
 Dim qtyAmicoAcc     As Integer
 Dim qtyInt          As Integer
+Dim qtySling        As Integer
 
 Dim Cell    As Variant
 
@@ -25,6 +26,7 @@ Dim opmPMotorisedFormula     As String
 Dim opmInfFormula     As String
 Dim opmAmicoFormula     As String
 Dim opmIntFormula     As String
+Dim opmSlingFormula   As String
 
 Dim result As String
 Dim Query As String
@@ -49,6 +51,7 @@ Dim LightQuadArm()        As String
 Dim LightMobile()         As String
 Dim LightSplit(1 To 1)          As String
 Dim LightMira(1 To 2)          As String
+Dim LightVega(1 To 2)          As String
 
 'Count light cells that contain "0" in description to determine number of light heads
 Dim iLHead                As Integer
@@ -57,8 +60,8 @@ Dim iLHead                As Integer
 Dim iNCRLHead             As Integer
 
 'Pendants
-Dim PendantSoloDescription() As String
-Dim PendantTandemDescription() As String
+Dim PendantSoloDescription()    As String
+Dim PendantTandemDescription()  As String
 Dim ArmConfigFSingle()    As String
 Dim ArmConfigFDouble()    As String
 Dim ArmConfigTFDouble()   As String
@@ -69,6 +72,16 @@ Dim ArmConfigICU()        As String
 Dim ConsoleHammer(1)       As String
 Dim ConsoleVertical()     As String
 Dim ConsoleLMC()          As String
+
+'AF Crating
+Dim AFCrating()     As String
+Dim iAF23           As Integer
+Dim iAF33           As Integer
+Dim iAF43           As Integer
+Dim iOBSingle           As Integer
+Dim iOBTandem           As Integer
+Dim AFCratingRow        As Long
+Dim FindAFCratingRow    As Range
 
 'Variables for 'bookmarked' rows
 'First and last row for Room Description in Variable worksheet
@@ -92,6 +105,12 @@ Dim FindLastPSoloDescRow        As Range
 Dim FindFirstPSoloDescRow       As Range
 Dim FindLastPTandemDescRow      As Range
 Dim FindFirstPTandemDescRow     As Range
+
+'First and last row for AF Crating in Variable worksheet
+Dim firstAFCratingRow        As Long
+Dim lastAFCratingRow         As Long
+Dim FindLastAFCratingRow     As Range
+Dim FindFirstAFCratingRow    As Range
 
 'First and last row for Pendant Arm Configs in StandardList worksheet
 Dim firstArmConfigFSingleRow        As Long
@@ -188,6 +207,14 @@ Dim FindFirstAmicoAccRow     As Range
 Dim FindLastAmicoAccRow      As Range
 Dim FindAmicoAccHeadingRow       As Range
 
+'First and last row for Slings to be copied to Configurator section
+Dim firstSlingRow         As Long
+Dim lastSlingRow          As Long
+Dim slingHeadingRow       As Long
+Dim FindFirstSlingRow     As Range
+Dim FindLastSlingRow      As Range
+Dim FindSlingHeadingRow       As Range
+
 'First and last row for Light Accessories in Configurator worksheet
 Dim firstLiCEAccRow    As Long
 Dim lastLiCEAccRow     As Long
@@ -198,15 +225,11 @@ Dim FindLastLiCEAccRow As Range
 Dim FindFirstLMiraAccRow As Range
 Dim FindLastLMiraAccRow As Range
 
-'First and last row for Pendant and Amico Accessories in Configurator worksheet
+'First and last row for Pendant Accessories in Configurator worksheet
 Dim firstPAccRow    As Long
 Dim lastPAccRow     As Long
-Dim firstAllPAccRow    As Long
-Dim lastAllPAccRow     As Long
 Dim FindFirstPAccRow As Range
 Dim FindLastPAccRow As Range
-Dim FindFirstAllPAccRow As Range
-Dim FindLastAllPAccRow As Range
 
 'First and last row for Amico Accessories in Configurator worksheet
 Dim firstConfigAmicoAccRow         As Long
@@ -249,8 +272,6 @@ Dim firstConfigDIOtherAccRow           As Long
 Dim lastConfigDIOtherAccRow            As Long
 Dim firstConfigDICableRow           As Long
 Dim lastConfigDICableRow            As Long
-Dim firstConfigDIOnceOffRow           As Long
-Dim lastConfigDIOnceOffRow            As Long
 Dim FindFirstConfigDISMRow         As Range
 Dim FindLastConfigDISMRow          As Range
 Dim FindFirstConfigDIWDRow         As Range
@@ -267,8 +288,12 @@ Dim FindFirstConfigDIOtherAccRow        As Range
 Dim FindLastConfigDIOtherAccRow         As Range
 Dim FindFirstConfigDICableRow       As Range
 Dim FindLastConfigDICableRow        As Range
-Dim FindFirstConfigDIOnceOffRow       As Range
-Dim FindLastConfigDIOnceOffRow        As Range
+
+'First and last row for Slings in Configurator worksheet
+Dim firstConfigSlingRow         As Long
+Dim lastConfigSlingRow          As Long
+Dim FindFirstConfigSlingRow     As Range
+Dim FindLastConfigSlingRow      As Range
 
 'First and last row for Light line items in Configurator section
 Dim firstLightSectionRow          As Long
@@ -292,7 +317,7 @@ Dim FindLastConsole1Row     As Range
 Dim FindFirstConsole2Row    As Range
 Dim FindLastConsole2Row     As Range
 
-'First and last row for Infrastructure line items in Configurator section
+'First and last row for AF+IC line items in Configurator section
 Dim firstInfrastructureSectionRow          As Long
 Dim lastInfrastructureSectionRow           As Long
 Dim FindFirstInfrastructureSectionRow    As Range
@@ -309,12 +334,18 @@ Dim firstAmicoAccSectionRow          As Long
 Dim lastAmicoAccSectionRow           As Long
 Dim FindFirstAmicoAccSectionRow    As Range
 Dim FindLastAmicoAccSectionRow     As Range
+        
+'First and last row for Sling line items in Configurator section
+Dim firstSlingSectionRow          As Long
+Dim lastSlingSectionRow           As Long
+Dim FindFirstSlingSectionRow    As Range
+Dim FindLastSlingSectionRow     As Range
 
 'Row to insert Lights
 Dim lightRow As Long
 Dim FindLightRow As Range
 
-'Row to insert Solo Pendant
+'Row to insert Pendant
 Dim pendantRow      As Long
 Dim FindPendantRow  As Range
 
@@ -329,6 +360,10 @@ Dim FindIntegrationRow As Range
 'Row to insert Amico Accessories
 Dim amicoAccRow As Long
 Dim FindAmicoAccRow As Range
+
+'Row to insert Slings
+Dim slingRow As Long
+Dim FindSlingRow As Range
 
 'Row to insert configuration in Tables worksheet to be exported to Word
 Dim configuratorRow         As Long
@@ -358,6 +393,7 @@ Dim roomPendantMDisSubtotal        As String
 Dim roomIntDisSubtotal        As String
 Dim roomInfDisSubtotal        As String
 Dim roomAmicoDisSubtotal        As String
+Dim roomSlingDisSubtotal        As String
 
 'Row to insert Configurator for What-If table
 Dim whatIfRow               As Long
@@ -381,7 +417,7 @@ Dim installP1   As String
 'Integration
 Dim installI1   As String
 
-'Infrastructure
+'AF+IC
 Dim installIF1   As String
 
 '
@@ -398,43 +434,153 @@ Unload Configurator_Room5
 
 End Sub
 '
-'Re-Initialize Configurator for the particular page
+'Re-Initialize the Configurator for the current page (Light)
 '
-Private Sub ClearButton_Click()
-
-For X = LBound(P, 2) To UBound(P, 2)
-    Call LightClear
-    Call PendantClear
-Next X
-
-'For X = LBound(P1, 2) To UBound(P1, 2)
-    'Call IntegrationClear
-    'Call InfrastructureClear
-'Next X
-
-Call UserForm_Initialize
+Private Sub ClearButtonL1_Click()
+    X = LBound(P, 2)
+    Call LightClear(1)
+    Call LightCategory
+    'Re-caption the page
+    MultiPage3.Pages("Light1").Caption = "Light 1"
 End Sub
 
-Private Sub LightClear()
-'Lights section - up to 5
-    k = 5
+Private Sub ClearButtonL2_Click()
+    X = LBound(P, 2) + 1
+    Call LightClear(2)
+    Call LightCategory
+    'Re-caption the page
+    MultiPage3.Pages("Light2").Caption = "Light 2"
+End Sub
+
+Private Sub ClearButtonL3_Click()
+    X = LBound(P, 2) + 2
+    Call LightClear(3)
+    Call LightCategory
+    'Re-caption the page
+    MultiPage3.Pages("Light3").Caption = "Light 3"
+End Sub
+
+Private Sub ClearButtonL4_Click()
+    X = LBound(P, 2) + 3
+    Call LightClear(4)
+    Call LightCategory
+    'Re-caption the page
+    MultiPage3.Pages("Light4").Caption = "Light 4"
+End Sub
+
+Private Sub ClearButtonL5_Click()
+    X = LBound(P, 2) + 4
+    Call LightClear(5)
+    Call LightCategory
+    'Re-caption the page
+    MultiPage3.Pages("Light5").Caption = "Light 5"
+End Sub
+'
+'Re-Initialize the Configurator for the current page (Pendant)
+'
+Private Sub ClearButtonP1_Click()
+    X = LBound(P, 2)
+    Call PendantClear(1)
+    Call PendantCategory
+    'Re-caption the page
+    MultiPage2.Pages("Pendant1").Caption = "Pendant 1"
+End Sub
+
+Private Sub ClearButtonP2_Click()
+    X = LBound(P, 2) + 1
+    Call PendantClear(2)
+    Call PendantCategory
+    'Re-caption the page
+    MultiPage2.Pages("Pendant2").Caption = "Pendant 2"
+End Sub
+
+Private Sub ClearButtonP3_Click()
+    X = LBound(P, 2) + 2
+    Call PendantClear(3)
+    Call PendantCategory
+    'Re-caption the page
+    MultiPage2.Pages("Pendant3").Caption = "Pendant 3"
+End Sub
+
+Private Sub ClearButtonP4_Click()
+    X = LBound(P, 2) + 3
+    Call PendantClear(4)
+    Call PendantCategory
+    'Re-caption the page
+    MultiPage2.Pages("Pendant4").Caption = "Pendant 4"
+End Sub
+
+Private Sub ClearButtonP5_Click()
+    X = LBound(P, 2) + 4
+    Call PendantClear(5)
+    Call PendantCategory
+    'Re-caption the page
+    MultiPage2.Pages("Pendant5").Caption = "Pendant 5"
+End Sub
+'
+'Re-Initialize the Configurator for the current page (ACCESSORIES)
+'
+Private Sub ClearButtonAccessories_Click()
+    Call AccessoriesClear
+    Call AmicoCategory
+End Sub
+'
+'Re-Initialize the Configurator for the current page (AF + IC)
+'
+Private Sub ClearButtonAFIC_Click()
+    Call AFICClear
+    Call AFCategory
+End Sub
+'
+'Re-Initialize the Configurator for the current page (Digital Integration)
+'
+Private Sub ClearButtonInt_Click()
+    Call IntegrationClear
+    Call DICategory
+End Sub
+'
+'Re-Initialize the Configurator for the current page (Slings)
+'
+Private Sub ClearButtonSling_Click()
+    Call SlingClear
+    Call SlingCategory
+End Sub
+    '
+'Re-Initialize the entire Configurator
+'
+Private Sub ClearButton_Click()
+    'Clear lights & pendants config pages
+    For X = LBound(P, 2) To UBound(P, 2)
+        Call LightClear
+        Call PendantClear
+    Next X
     
-    'Hide the tabs for lights that are not configured
-    For j = 2 To k
-        MultiPage3.Pages("Light" & j).Visible = False
-    Next j
+    'Clear the rest of the config pages
+    Call AccessoriesClear
+    Call AFICClear
+    Call IntegrationClear
+    Call SlingClear
+    
+    'Re-initialize UserForm
+    Call UserForm_Initialize
+End Sub
+
+Private Sub LightClear(productInt As Integer)
+'Lights section - up to 5
 
     With Sheets("Configurator")
     
         'Clear textboxes and options
-        .Range("LightRm5Qty") = ""
-
+        .Range("LightRm5Qty") = productInt
+        
         .Range("L" & P(1, X) & "Rm5Type") = "iCE 30m"
         .Range("L" & P(1, X) & "Rm5Name") = ""
         .Range("L" & P(1, X) & "Rm5Qty") = ""
         .Range("L" & P(1, X) & "Rm5Desc") = ""
         .Range("L" & P(1, X) & "Rm5iCE") = ""
         .Range("L" & P(1, X) & "Rm5CamAdder") = ""
+        .Range("L" & P(1, X) & "Rm54KCam") = ""
+        .Range("L" & P(1, X) & "Rm5Vega") = ""
         .Range("L" & P(1, X) & "Rm5Mira") = ""
         .Range("L" & P(1, X) & "Rm5Gamma") = ""
     
@@ -446,46 +592,34 @@ Private Sub LightClear()
         .Range("L" & P(1, X) & "Rm5Mobile") = False
         .Range("L" & P(1, X) & "Rm5Split") = False
         
-        'Clear Accessories for iCE30m and Mira lights
-         counter = 0
+        'Clear Accessories for iCE30m Lights
          For I = firstLiCEAccRow To lastLiCEAccRow
-             'Zero out the accessories
-             If .Range(P(2, X) & I).Value > 0 And .Range(P(2, X) & I).Value <> "" Then
-                .Range(P(2, X) & I).Value = ""
-                Controls("L" & P(1, X) & "_Acc_Qty" & counter).Value = ""
-                counter = counter + 1
-             End If
+            .Range(P(2, X) & I).Value = ""
          Next I
          
-         counter = 0
+         'Clear Accessories for Mira Lights
          For I = firstLMiraAccRow To lastLMiraAccRow
-             'Zero out the accessories
-             If .Range(P(2, X) & I).Value > 0 And .Range(P(2, X) & I).Value <> "" Then
-                .Range(P(2, X) & I).Value = ""
-                Controls("L" & P(1, X) & "_Acc_Qty" & counter).Value = ""
-                counter = counter + 1
-             End If
+            .Range(P(2, X) & I).Value = ""
          Next I
     End With
+
+    'Clear QTY textboxes
+    For I = 0 To qtyLight
+        Controls("L" & P(1, X) & "_Acc_Qty" & I).Value = ""
+    Next I
 
     'Clear accessories list
     Controls("Light" & P(1, X) & "AccSel").Clear
     Controls("Light" & P(1, X) & "Acc").Clear
 End Sub
 
-Private Sub PendantClear()
+Private Sub PendantClear(productInt As Integer)
 'Pendants Section - up to 5
-    k = 5
-    
-    'Hide the tabs for pendants that are not configured
-    For j = 2 To k
-        MultiPage2.Pages("Pendant" & j).Visible = False
-    Next j
 
     With Sheets("Configurator")
     
         'Clear textboxes and options
-        .Range("PendantRm5Qty") = ""
+        .Range("PendantRm5Qty") = productInt
 
         .Range("P" & P(1, X) & "Rm5Type") = "Solo"
         .Range("P" & P(1, X) & "Rm5Name") = ""
@@ -523,13 +657,13 @@ Private Sub PendantClear()
         .Range("P" & P(1, X) & "Rm5Con1UPS") = ""
         .Range("P" & P(1, X) & "Rm5Con1ESS_10") = ""
         .Range("P" & P(1, X) & "Rm5Con1ESS_15") = ""
-        .Range("P" & P(1, X) & "Rm4Con1ESS_20") = ""
+        .Range("P" & P(1, X) & "Rm5Con1ESS_20") = ""
         .Range("P" & P(1, X) & "Rm5Con1Power") = ""
         .Range("P" & P(1, X) & "Rm5Con1RCD") = ""
         .Range("P" & P(1, X) & "Rm5Con1Earth") = ""
         .Range("P" & P(1, X) & "Rm5Con1AV") = ""
         .Range("P" & P(1, X) & "Rm5Con1DataRun") = ""
-        .Range("P" & P(1, X) & "Rm5Con2Dia68") = ""
+        .Range("P" & P(1, X) & "Rm5Con1Dia68") = ""
     
         'Console 2
         .Range("P" & P(1, X) & "Rm5Con2Console") = ""
@@ -543,7 +677,7 @@ Private Sub PendantClear()
         .Range("P" & P(1, X) & "Rm5Con2UPS") = ""
         .Range("P" & P(1, X) & "Rm5Con2ESS_10") = ""
         .Range("P" & P(1, X) & "Rm5Con2ESS_15") = ""
-        .Range("P" & P(1, X) & "Rm4Con2ESS_20") = ""
+        .Range("P" & P(1, X) & "Rm5Con2ESS_20") = ""
         .Range("P" & P(1, X) & "Rm5Con2Power") = ""
         .Range("P" & P(1, X) & "Rm5Con2RCD") = ""
         .Range("P" & P(1, X) & "Rm5Con2Earth") = ""
@@ -551,21 +685,166 @@ Private Sub PendantClear()
         .Range("P" & P(1, X) & "Rm5Con2DataRun") = ""
         .Range("P" & P(1, X) & "Rm5Con2Dia68") = ""
         
-        'Clear Pendant Accessories
-        counter = 0
+        'Clear Accessories for Pendants
         For I = firstPAccRow To lastPAccRow
-            'Empty Accessories textboxes
-            If .Range(P(2, X) & I).Value > 0 And .Range(P(2, X) & I).Value <> "" Then
-                .Range(P(2, X) & I).Value = ""
-                Controls("P" & P(1, X) & "_Acc_Qty" & counter).Value = ""
-                counter = counter + 1
-            End If
+            .Range(P(2, X) & I).Value = ""
         Next I
     End With
+    
+    'Clear QTY textboxes
+    For I = 0 To qtyPendant
+        Controls("P" & P(1, X) & "_Acc_Qty" & I).Value = ""
+    Next I
         
     'Clear accessories list
     Controls("Pendant" & P(1, X) & "AccSel").Clear
     Controls("Pendant" & P(1, X) & "Acc").Clear
+End Sub
+
+Private Sub AccessoriesClear()
+'ACCESSORIES SECTION
+
+    With Sheets("Configurator")
+    
+        'Clear option
+        .Range("AmicoOptionRm5") = False
+        
+        'Clear Accessories
+        For I = firstConfigAmicoAccRow To lastConfigAmicoAccRow
+            .Range("G" & I).Value = ""
+        Next I
+    End With
+
+    'Clear QTY textboxes
+    For I = 0 To qtyAmicoAcc
+        Controls("Amico_Acc_Qty" & I).Value = ""
+    Next I
+        
+    'Clear accessories list
+    Controls("AmicoAccSel").Clear
+    Controls("AmicoAcc").Clear
+End Sub
+
+Private Sub AFICClear()
+'AirFRAME + IC SECTION
+
+    With Sheets("Configurator")
+    
+        'Clear option
+        .Range("AFICOptionRm5") = False
+        
+        'Clear selected line items
+        For I = firstConfigAFLEDRow To lastConfigAFLEDRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigAccRow To lastConfigAccRow
+            .Range("G" & I).Value = ""
+        Next I
+    
+        For I = firstConfigInGridRow To lastConfigInGridRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigIndCompRow To lastConfigIndCompRow
+            .Range("G" & I).Value = ""
+        Next I
+    End With
+
+    'Clear QTY textboxes
+    For I = 0 To qtyAFIC
+        Controls("AF_IC_Qty" & I).Value = ""
+    Next I
+
+    'Clear listboxes
+    Controls("AF_IC_Sel").Clear
+    Controls("AirFRAME_LEDiffuser").Clear
+    Controls("InfAccessories").Clear
+    Controls("In_GridIndigoClean").Clear
+    Controls("IndigoComponent").Clear
+End Sub
+
+Private Sub IntegrationClear()
+'Digital Integration SECTION
+
+    With Sheets("Configurator")
+    
+        'Clear option
+        .Range("DIOptionRm5") = False
+        
+        'Clear selected line items
+        For I = firstConfigDISMRow To lastConfigDISMRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigDIWDRow To lastConfigDIWDRow
+            .Range("G" & I).Value = ""
+        Next I
+    
+        For I = firstConfigDIRIRow To lastConfigDIRIRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigDITPRow To lastConfigDITPRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigDIRCRow To lastConfigDIRCRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigDIAudioRow To lastConfigDIAudioRow
+            .Range("G" & I).Value = ""
+        Next I
+    
+        For I = firstConfigDIOtherAccRow To lastConfigDIOtherAccRow
+            .Range("G" & I).Value = ""
+        Next I
+        
+        For I = firstConfigDICableRow To lastConfigDICableRow
+            .Range("G" & I).Value = ""
+        Next I
+    End With
+
+    'Clear QTY textboxes
+    For I = 0 To qtyInt
+        Controls("DI_Qty" & I).Value = ""
+    Next I
+
+    'Clear listboxes
+    Controls("DI_Sel").Clear
+    Controls("SurgicalMonitor").Clear
+    Controls("WallDisplay").Clear
+    Controls("Encoder_Decoder").Clear
+    Controls("TouchPanel").Clear
+    Controls("RoomCamera").Clear
+    Controls("Audio").Clear
+    Controls("Others_Acc").Clear
+    Controls("FibreCabling").Clear
+End Sub
+
+Private Sub SlingClear()
+'Sling SECTION
+
+    With Sheets("Configurator")
+    
+        'Clear option
+        .Range("SlingOptionRm5") = False
+        
+        'Clear selected line items
+        For I = firstConfigSlingRow To lastConfigSlingRow
+            .Range("G" & I).Value = ""
+        Next I
+    End With
+
+    'Clear QTY textboxes
+    For I = 0 To qtySling
+        Controls("Sling_Qty" & I).Value = ""
+    Next I
+        
+    'Clear listboxes
+    Controls("SlingSel").Clear
+    Controls("Sling").Clear
 End Sub
 '
 'Save button - Saves and export the Configurator
@@ -699,6 +978,29 @@ Private Sub OKButton_Click()
         Rows(firstIntegrationSectionRow & ":" & lastIntegrationSectionRow).Select
         Selection.Delete Shift:=xlUp
     End If
+    
+    'Clear previously configured Sling line items, if any
+    With Sheets("Proposal")
+                            
+        'Find row number after Configurator_SlingStart heading as first row, and row number before Configurator_SlingEnd heading as last row
+        Set FindFirstSlingSectionRow = .Range("A:A").Find(What:="Configurator_Rm5SlingStart", LookIn:=xlValues)
+        Set FindLastSlingSectionRow = .Range("A:A").Find(What:="Configurator_Rm5SlingEnd", LookIn:=xlValues)
+        Set FindSlingHeadingRow = .Range("A:A").Find(What:="Config_Rm5SlingHeading", LookIn:=xlValues)
+    End With
+                        
+    'First and last row for Amico Accessories Section
+    firstSlingSectionRow = FindFirstSlingSectionRow.Row + 1
+    lastSlingSectionRow = FindLastSlingSectionRow.Row - 1
+    slingHeadingRow = FindSlingHeadingRow.Row
+                        
+    'Empty Sling heading
+    Range("B" & slingHeadingRow).Value = ""
+                        
+    'Clear the Sling section if accessories were configured previously
+    If firstSlingSectionRow <> FindLastSlingSectionRow.Row Then
+        Rows(firstSlingSectionRow & ":" & lastSlingSectionRow).Select
+        Selection.Delete Shift:=xlUp
+    End If
 
     'Update progress bar label and indicator
     ProgressBar.ProgressBar1.Value = 20
@@ -709,7 +1011,7 @@ Private Sub OKButton_Click()
     With Sheets("Proposal")
         
         'Find row number after Configurator_Start heading as first row, and row number before RoomConfig_1 heading as last row
-        Set FindFirstRoom5ConfigRow = .Range("A:A").Find(What:="Configurator_Rm4Infrastructure", LookIn:=xlValues)
+        Set FindFirstRoom5ConfigRow = .Range("A:A").Find(What:="Configurator_Rm4SlingEnd", LookIn:=xlValues)
         Set FindLastRoom5ConfigRow = .Range("A:A").Find(What:="RoomConfig_5", LookIn:=xlValues)
     End With
     
@@ -793,6 +1095,7 @@ Private Sub OKButton_Click()
     opmInfFormula = "="
     opmAmicoFormula = "=SUM("
     opmIntFormula = "="
+    opmSlingFormula = "=SUM("
     
     'Zero out room variables
     roomLightDisSubtotal = ""
@@ -801,11 +1104,14 @@ Private Sub OKButton_Click()
     roomPendantMDisSubtotal = ""
     roomInfDisSubtotal = ""
     roomAmicoDisSubtotal = ""
+    roomIntDisSubtotal = ""
+    roomSlingDisSubtotal = ""
 
-    'Zero out installation variables
+    'Zero out installation variables (not for Amico Accessories & Slings)
     installL1 = ""
     installP1 = ""
     installIF1 = ""
+    installI1 = ""
 
     'Zero out Qty of product categories if "0" or left empty
     If LightNo = "0" Or LightNo = "" Then LightNo = "0"
@@ -846,6 +1152,15 @@ Private Sub OKButton_Click()
         End If
     End With
    
+    'Store Yes/No value for Slings
+    With Sheets("Configurator")
+        If Controls("SlingYes").Value = True Then
+            .Range("SlingOptionRm5") = True
+        ElseIf Controls("SlingNo").Value = True Then
+            .Range("SlingOptionRm5") = False
+        End If
+    End With
+   
     'Update progress bar label and indicator
     ProgressBar.ProgressBar1.Value = 28
     ProgressBar.Label.Caption = "Exporting data..."
@@ -861,6 +1176,19 @@ Private Sub OKButton_Click()
     amicoAccHeadingRow = FindAmicoAccHeadingRow.Row
     
     Range("E" & amicoAccHeadingRow).Value = "0"
+    
+    With Sheets("Proposal")
+        'Find row number for Sling Heading
+        Set FindSlingHeadingRow = .Range("A:A").Find(What:="Config_Rm5SlingHeading", LookIn:=xlValues)
+    End With
+    slingHeadingRow = FindSlingHeadingRow.Row
+                    
+    Range("E" & slingHeadingRow).Value = "0"
+            
+    'Sling Section
+    If Controls("SlingYes").Value = True Then
+        Call SlingTab
+    End If
     
     'Integration Section
     If Controls("DI_Yes").Value = True Then
@@ -1013,12 +1341,17 @@ flagStartRoomNo:
         Else
             roomIntDisSubtotal = "00"
         End If
+        If Controls("SlingYes").Value = True Then
+            roomSlingDisSubtotal = .Range("Config_Rm5Slings").Formula
+        Else
+            roomSlingDisSubtotal = "00"
+        End If
     End With
 
     'Fill in the relevant details for the Room Configuration Heading
     Range("B" & room5ConfigRow).Value = Controls("Room5Name").Value
     Range("E" & room5ConfigRow).Value = CInt(Controls("Room5No").Value)
-    Range("G" & room5ConfigRow).Formula = "=" & Right(roomLightDisSubtotal, Len(roomLightDisSubtotal) - 1) & "+" & Right(roomExamLightDisSubtotal, Len(roomExamLightDisSubtotal) - 1) & "+" & Right(roomPendantDisSubtotal, Len(roomPendantDisSubtotal) - 1) & "+" & Right(roomPendantMDisSubtotal, Len(roomPendantMDisSubtotal) - 1) & "+" & Right(roomInfDisSubtotal, Len(roomInfDisSubtotal) - 1) & "+" & Right(roomAmicoDisSubtotal, Len(roomAmicoDisSubtotal) - 1) & "+" & Right(roomIntDisSubtotal, Len(roomIntDisSubtotal) - 1)
+    Range("G" & room5ConfigRow).Formula = "=" & Right(roomLightDisSubtotal, Len(roomLightDisSubtotal) - 1) & "+" & Right(roomExamLightDisSubtotal, Len(roomExamLightDisSubtotal) - 1) & "+" & Right(roomPendantDisSubtotal, Len(roomPendantDisSubtotal) - 1) & "+" & Right(roomPendantMDisSubtotal, Len(roomPendantMDisSubtotal) - 1) & "+" & Right(roomInfDisSubtotal, Len(roomInfDisSubtotal) - 1) & "+" & Right(roomAmicoDisSubtotal, Len(roomAmicoDisSubtotal) - 1) & "+" & Right(roomIntDisSubtotal, Len(roomIntDisSubtotal) - 1) & "+" & Right(roomSlingDisSubtotal, Len(roomSlingDisSubtotal) - 1)
     Range("F" & room5ConfigRow).Formula = Replace(Range("G" & room5ConfigRow).Formula, "G", "F")
     Range("J" & room5ConfigRow).Formula = Replace(Range("G" & room5ConfigRow).Formula, "G", "J")
     Range("K" & room5ConfigRow).Formula = Replace(Range("G" & room5ConfigRow).Formula, "G", "K")
@@ -1079,6 +1412,8 @@ End Sub
 'Light Section for Save button
 Private Sub LightTab()
 
+Unprotect
+
 'Go through each configured light tab
 For X = LBound(P, 2) To LightNo
 
@@ -1114,6 +1449,7 @@ flagStartLightNo:
     'Zero out empty textboxes
     If Controls("L" & P(1, X) & "iCEItem").Value = "" Then Controls("L" & P(1, X) & "iCEItem").Value = 0
     If Controls("L" & P(1, X) & "CamAdder").Value = "" Then Controls("L" & P(1, X) & "CamAdder").Value = 0
+    If Controls("L" & P(1, X) & "4KCam").Value = "" Then Controls("L" & P(1, X) & "4KCam").Value = 0
     
     'Zero out Accessories textboxes if empty
     For j = 0 To qtyLight
@@ -1180,16 +1516,32 @@ flagStartLightNo:
         'Comboboxes/Textboxes
         If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm5iCE") = Controls("L" & P(1, X) & "iCEItem").Value
         If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm5CamAdder") = Controls("L" & P(1, X) & "CamAdder").Value
+        If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm54KCam") = Controls("L" & P(1, X) & "4KCam").Value
         If Controls("L" & P(1, X) & "Mira").Value = True Then .Range("L" & P(1, X) & "Rm5Mira") = Controls("L" & P(1, X) & "MiraLight").Value
         If Controls("L" & P(1, X) & "Vega").Value = True Then .Range("L" & P(1, X) & "Rm5Vega") = Controls("L" & P(1, X) & "VegaItem").Value
         If Controls("L" & P(1, X) & "Gamma").Value = True Then .Range("L" & P(1, X) & "Rm5Gamma") = Controls("L" & P(1, X) & "GammaItem").Value
+        
+        'Re-set accessories (Room Configuration)
+        Set FindFirstLiCEAccRow = .Range(Rm5Range).Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+    
+        'First and last row for Light Accessories
+        firstLiCEAccRow = FindFirstLiCEAccRow.Row + 1
+        lastLiCEAccRow = FindLastLiCEAccRow.Row - 2
+
+        Set FindFirstLMiraAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindLastLMiraAccRow = .Range(Rm5Range).Find(What:="Pendants", LookIn:=xlValues)
+        
+        'First and last row for Light Accessories
+        firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
+        lastLMiraAccRow = FindLastLMiraAccRow.Row - 2
         
         If Controls("L" & P(1, X) & "iCE").Value = True Then
             'Clear acc for iCE 30m if previously configured
             For I = firstLiCEAccRow To lastLiCEAccRow
                 .Range(P(2, X) & I).Value = ""
             Next I
-        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
+        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Or Controls("L" & P(1, X) & "Vega").Value = True Then
             'Clear acc for Mira 70 if previously configured
             For I = firstLMiraAccRow To lastLMiraAccRow
                 .Range(P(2, X) & I).Value = ""
@@ -1206,7 +1558,7 @@ flagStartLightNo:
                 Next j
             Next I
         
-        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
+        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Or Controls("L" & P(1, X) & "Vega").Value = True Then
             For I = firstLMiraAccRow To lastLMiraAccRow
                 For j = 0 To Controls("Light" & P(1, X) & "AccSel").ListCount - 1
                     If .Range("B" & I).Value = Controls("Light" & P(1, X) & "AccSel").List(j) Then
@@ -1218,10 +1570,10 @@ flagStartLightNo:
     End With
     
     With Sheets("Proposal")
-        'First and last row for Light to be copied to above Configurator_Rm3Lights row
+        'First and last row for Light to be copied to above Configurator_Rm5Lights row
         'Find row number for Config_Light as first row, and row number before L1 as last row
         Set FindFirstLightRow = .Range("A:A").Find(What:="Config_Light", LookIn:=xlValues)
-        Set FindLastLightRow = .Range("A:A").Find(What:="Carrot", LookIn:=xlValues)
+        Set FindLastLightRow = .Range("A:A").Find(What:="Pendants", LookIn:=xlValues)
         Set FindLightRow = .Range("A:A").Find(What:="Configurator_Rm5Lights", LookIn:=xlValues)
     End With
     firstLightRow = FindFirstLightRow.Row
@@ -1273,7 +1625,29 @@ flagStartLightNo:
                     Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "CamAdder").Value) * lightQTY
                     Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "CamAdder").Value)
                 End If
-                
+            
+            '4K Camera - 3 line items
+            'Out: IP Video
+            ElseIf Range("A" & I).Value = "SL-CAM-4K-ADD" Then
+                If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
+                    Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
+                    Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
+                End If
+                                
+            'Wireless
+            ElseIf Range("A" & I).Value = "SL-CAM-4K-WIRELESS-ADD" Then
+                If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
+                    Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
+                    Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
+                End If
+                                
+            'In: Ethernet & Out: HDMI
+            ElseIf Range("A" & I).Value = "SL-CAM-4K-DEC" Then
+                If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
+                    Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
+                    Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
+                End If
+            
             'Auto include additional line items for non camera ready light heads (touch switch handle ASY)
             ElseIf Range("A" & I).Value = "SL-HDL-TS-ASY" Then
             
@@ -1285,8 +1659,8 @@ flagStartLightNo:
                     iLHead = iLHead * 2
                 End If
                 
-                'Count no. of non-HD camera ready light heads
-                iNCRLHead = iLHead - CInt(Controls("L" & P(1, X) & "CamAdder").Value)
+                'Count no. of non-HD & non-4K camera ready light heads
+                iNCRLHead = iLHead - CInt(Controls("L" & P(1, X) & "CamAdder").Value) - CInt(Controls("L" & P(1, X) & "4KCam").Value)
                 
                 'Include the QTY for the line item according to no. of non-HD camera ready light heads
                 Range("E" & I).Value = iNCRLHead * lightQTY
@@ -1313,7 +1687,8 @@ flagStartLightNo:
 '                'Include the QTY for the line item according to no. of light heads
 '                Range("E" & i).Value = iLHead * lightQTY
 '                Range("C" & i).Value = iLHead
-                
+            
+            'Structural interface plate - SOLO is included whenever there is a Install-iCE30m
             'Only for iCE30m single, dual, triple, quad arms. Split light will have 2 included for a single set
             ElseIf Range("A" & I).Value = "Interface Plate - SOLO" Then
                 If Controls("L" & P(1, X) & "Split").Value = True Then
@@ -1342,7 +1717,7 @@ flagStartLightNo:
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
             
-            'Mira Light installation
+            'Mira 70 Light installation
             ElseIf Range("A" & I).Value = "Install-Mira 70" Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
@@ -1365,13 +1740,13 @@ flagStartLightNo:
                 Range("C" & I).Value = 1
                 installL1 = "=F" & I
             End If
-        'Gamma 50 Light
+        'MSL119C Light
         ElseIf Controls("L" & P(1, X) & "Gamma").Value = True Then
             If Range("B" & I).Value = Controls("L" & P(1, X) & "GammaItem").Value Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
             
-            'Gamma Light installation
+            'MSL119C installation
             ElseIf Range("A" & I).Value = "Install-MSL119C" Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
@@ -1403,6 +1778,7 @@ flagStartLightNo:
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Controls("Light" & P(1, X) & "Name").Value
     Range("G" & configuratorTableRow).Formula = installL1
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -1425,9 +1801,6 @@ flagStartLightNo:
         'iCE30m
         opmLightFormula = opmLightFormula & "+Proposal!G" & I
         Range("Config_Rm5OPM_Lights").Formula = opmLightFormula
-        
-    Else
-        'Nothing happens
     End If
     
     With Sheets("Tables")
@@ -1476,7 +1849,7 @@ flagStartLightNo:
     'First and last row for Configurator section in What-If table
     whatIfStartRow = FindWhatIfStartRow.Row + 1
 
-    'Copy the relevant info into What-If Table
+    'Add details to What-If table in Tables worksheet
     Rows(whatIfStartRow & ":" & whatIfStartRow).Select
     Application.CutCopyMode = False
     Selection.Copy
@@ -1497,6 +1870,8 @@ End Sub
 
 'Pendant Section for Save button
 Private Sub PendantTab()
+
+Unprotect
 
 'Go through each configured pendant tab
 For X = LBound(P, 2) To PendantNo
@@ -1578,7 +1953,7 @@ flagStartPendantNo:
     Next j
 
     'Update progress bar label and indicator
-    ProgressBar.ProgressBar1.Value = 75
+    ProgressBar.ProgressBar1.Value = 65
     ProgressBar.Label.Caption = "Exporting Pendant data..."
     ProgressBar.Repaint
 
@@ -1601,6 +1976,8 @@ flagStartPendantNo:
             .Range("P" & P(1, X) & "Rm5Type") = "Std EQ"
         ElseIf Controls("Pendant" & P(1, X) & "StdICU").Value = True Then
             .Range("P" & P(1, X) & "Rm5Type") = "Std ICU"
+        ElseIf Controls("Pendant" & P(1, X) & "PLP").Value = True Then
+            .Range("P" & P(1, X) & "Rm5Type") = "Std PLP"
         End If
         
         'Options
@@ -1697,16 +2074,25 @@ flagStartPendantNo:
         .Range("P" & P(1, X) & "Rm5Con2UPS") = Controls("UPS_Blue_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2ESS_10") = Controls("ESS_Red_10Amp_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2ESS_15") = Controls("ESS_Red_15Amp_P" & P(1, X) & "Con2").Value
-        .Range("P" & P(1, X) & "Rm5Con1ESS_20") = Controls("ESS_Red_20Amp_P" & P(1, X) & "Con2").Value
+        .Range("P" & P(1, X) & "Rm5Con2ESS_20") = Controls("ESS_Red_20Amp_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2Power") = Controls("PowerInd_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2RCD") = Controls("RCD_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2Earth") = Controls("Earth_P" & P(1, X) & "Con2").Value
         .Range("P" & P(1, X) & "Rm5Con2DataRun") = Controls("DataRun_P" & P(1, X) & "Con2").Value
-        .Range("P" & P(1, X) & "Rm5Con1Dia68") = Controls("Dia68_P" & P(1, X) & "Con2").Value
+        .Range("P" & P(1, X) & "Rm5Con2Dia68") = Controls("Dia68_P" & P(1, X) & "Con2").Value
         
         'Store Cutout Types/Qty textbox
         .Range("P" & P(1, X) & "Rm5Con2AV") = Controls("AV_P" & P(1, X) & "Con2").Value
 
+        'Re-set accessories (Room Configuration)
+        Set FindFirstPAccRow = .Range(Rm5Range).Find(What:="Accessories - Pendants", LookIn:=xlValues)
+        Set FindLastPAccRow = .Range(Rm5Range).Find(What:="End_Pendant", LookIn:=xlValues)
+        
+        'First and last row for Pendant Accessories
+        firstPAccRow = FindFirstPAccRow.Row + 1
+        lastPAccRow = FindLastPAccRow.Row - 1
+
+        'Accessories
         'Clear acc for Pendant if previously configured
         For I = firstPAccRow To lastPAccRow
             .Range(P(2, X) & I).Value = ""
@@ -1887,58 +2273,50 @@ flagStartPendantNo:
             'Accessories
             For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
                 If Range("B" & I).Value = Controls("Pendant" & P(1, X) & "AccSel").List(j) Then
-                
-                    'If Ceiling NIST is selected, add onto the QTY
-                    If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCPS" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCA" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTCO2" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCNO" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCO" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCST" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCPGS" Then
-                        Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    'Else, take in the QTY directly
-                    Else
-                        Range("E" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                        Range("C" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    End If
-                End If
-                
-                'Auto include certain line items if specified accessory is selected
-                If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
-                    For k = pendantRow + 1 To lastRow
-                        If Range("A" & k).Value = "2031VA" Then
-                            Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                            Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                        End If
-                    Next k
-                    
-                ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
-                    For k = pendantRow + 1 To lastRow
-                        If Range("A" & k).Value = "YY104328-01" Then
-                            Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                            Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                        End If
-                    Next k
+                    Range("E" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                    Range("C" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
                 End If
             Next j
         Next I
         
+        'Auto include certain line items if specified accessory is selected
+        For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
+            If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
+                For k = pendantRow + 1 To lastRow
+                    If Range("A" & k).Value = "2031VA" Then
+                        Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                        Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                    End If
+                Next k
+                
+            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
+                For k = pendantRow + 1 To lastRow
+                    If Range("A" & k).Value = "YY104328-01" Then
+                        Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                        Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                    End If
+                Next k
+                
+            'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
+            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle/Pendant Mount, Single, Extended Arm" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega LED 80, Knuckle/Pendant Mount, Single, Extended Arm" Then
+            
+                For k = pendantRow + 1 To lastRow
+                    'Mount adaptor
+                    If Range("A" & k).Value = "LH-MNT-KNL-MIRA" Then
+                        Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                        Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+
+                    'Cable
+                    ElseIf Range("A" & k).Value = "L-MLED-CBLE-1" Then
+                        Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                        Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                    End If
+                Next k
+            End If
+        Next j
+        
     'Pendant Tandem
-    ElseIf Controls("Pendant" & P(1, X) & "StdICU").Value = True Or Controls("Pendant" & P(1, X) & "T").Value = True Or Controls("Pendant" & P(1, X) & "ICU").Value = True Then
+    ElseIf Controls("Pendant" & P(1, X) & "StdICU").Value = True Or Controls("Pendant" & P(1, X) & "T").Value = True Or Controls("Pendant" & P(1, X) & "ICU").Value = True Or Controls("Pendant" & P(1, X) & "PLP").Value = True Then
         Call PendantTandemTab
     End If
     
@@ -1957,8 +2335,9 @@ flagStartPendantNo:
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Controls("Pendant" & P(1, X) & "Name").Value
     Range("G" & configuratorTableRow).Formula = installP1
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
-    Range("F" & configuratorTableRow).Formula = "=Proposal!G" & I
+    Range("F" & configuratorTableRow).Formula = "=G" & I
     
     'Calculate the OPM in Variable worksheet
     Sheets("Variable").Activate
@@ -2084,7 +2463,7 @@ Private Sub PendantTandemTab()
     pendantQTY = CInt(Controls("Pendant" & P(1, X) & "No").Value) * CInt(Controls("Room5No").Value)
     
     'Name the pendant config, and quantify it
-    Worksheets("Configurator").Range("P" & P(1, X) & "Rm3Image").Copy Range("A" & pendantRow)
+    Worksheets("Configurator").Range("P" & P(1, X) & "Rm5Image").Copy Range("A" & pendantRow)
     Range("B" & pendantRow).Value = Controls("Pendant" & P(1, X) & "Name").Value
     Range("C" & pendantRow).Value = CInt(Controls("Pendant" & P(1, X) & "No").Value)
     Range("E" & pendantRow).Value = pendantQTY
@@ -2242,57 +2621,6 @@ For I = firstConsole1Row To lastConsole1Row
         Range("E" & I).Value = CInt(Controls("Earth_P" & P(1, X) & "Con1").Value) * pendantQTY
         Range("C" & I).Value = CInt(Controls("Earth_P" & P(1, X) & "Con1").Value)
     End If
-    'Add additional Ceiling NISTs if selected under accessories
-    For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
-        If Range("B" & I).Value = Controls("Pendant" & P(1, X) & "AccSel").List(j) Then
-        
-            'If Ceiling NIST is selected, add onto the QTY
-            If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCPS" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCA" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTCO2" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCNO" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCO" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCST" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "NISTGOCPGS" Then
-                Range("E" & I).Value = Range("E" & I).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & I).Value = Range("C" & I).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            'Else, take in the QTY directly
-            Else
-                Range("E" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                Range("C" & I).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            End If
-        End If
-        
-        'Auto include certain line items if specified accessory is selected
-        If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
-            For k = pendantRow + 1 To lastRow
-                If Range("A" & k).Value = "2031VA" Then
-                    Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                    Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                End If
-            Next k
-            
-        ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
-            For k = pendantRow + 1 To lastRow
-                If Range("A" & k).Value = "YY104328-01" Then
-                    Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                    Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                End If
-            Next k
-        End If
-    Next j
 Next I
 
 'Fill the line item QTYs for Console 2
@@ -2390,10 +2718,49 @@ For I = firstConsole2Row To lastConsole2Row
         Range("C" & I).Value = CInt(Controls("Earth_P" & P(1, X) & "Con2").Value)
     End If
 Next I
+
+'Auto include certain line items if specified accessory is selected
+For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
+    If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
+        For k = pendantRow + 1 To lastRow
+            If Range("A" & k).Value = "2031VA" Then
+                Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+            End If
+        Next k
+                
+    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
+        For k = pendantRow + 1 To lastRow
+            If Range("A" & k).Value = "YY104328-01" Then
+                Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+            End If
+        Next k
+                
+    'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
+    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle/Pendant Mount, Single, Extended Arm" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega LED 80, Knuckle/Pendant Mount, Single, Extended Arm" Then
+            
+        For k = pendantRow + 1 To lastRow
+            'Mount adaptor
+            If Range("A" & k).Value = "LH-MNT-KNL-MIRA" Then
+                Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                    
+            'Cable
+            ElseIf Range("A" & k).Value = "L-MLED-CBLE-1" Then
+                Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+            End If
+        Next k
+    End If
+Next j
 End Sub
 
 'Amico Accessories for Save button
 Private Sub AmicoAccTab()
+
+Unprotect
+
     'Zero out Accessories textboxes if empty
     For j = 0 To qtyAmicoAcc
         If Controls("Amico_Acc_Qty" & j).Value = "" Then
@@ -2420,7 +2787,7 @@ Private Sub AmicoAccTab()
     End With
     
     'Update progress bar label and indicator
-    ProgressBar.ProgressBar1.Value = 60
+    ProgressBar.ProgressBar1.Value = 50
     ProgressBar.Label.Caption = "Exporting Amico Accessories data..."
     ProgressBar.Repaint
 
@@ -2437,7 +2804,7 @@ Private Sub AmicoAccTab()
     amicoAccRow = FindAmicoAccRow.Row
     amicoAccHeadingRow = FindAmicoAccHeadingRow.Row
     
-    'Rename Amico Acc heading with room name
+    'Rename Amico Acc heading with room name and quantify it
     Range("B" & amicoAccHeadingRow).Value = Controls("Room5Name").Value & " - Amico Accessories"
     Range("E" & amicoAccHeadingRow).Value = CInt(Controls("Room5No").Value)
     
@@ -2454,7 +2821,7 @@ Private Sub AmicoAccTab()
                 Rows(amicoAccRow & ":" & amicoAccRow).Select
                 Selection.Insert Shift:=xlDown
                 
-                'If in Room Configuration mode, multiply the local Acc QTY with Room QTY
+                'Multiply the local Acc QTY with Room QTY
                 Range("E" & amicoAccRow).Value = CInt(Controls("Amico_Acc_Qty" & j).Value) * CInt(Controls("Room5No").Value)
                 
                 'Unit QTY for column C -> QTY entered by user per room/config
@@ -2491,6 +2858,7 @@ Private Sub AmicoAccTab()
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Formula = Range("B" & I).Value
     Range("G" & configuratorTableRow).Formula = "0"
+    Range("H" & configuratorTableRow).Formula = Range("G" & configuratorTableRow).Formula
     Range("E" & configuratorTableRow).Formula = Range("G" & configuratorTableRow).Formula
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -2628,7 +2996,7 @@ Private Sub AFICTab()
         'First and last row for AF+IC to be copied
         'Find row number after Config_Infrastructure heading as first row, and row number before Surfacide heading as last row
         Set FindFirstInfrastructureSectionRow = .Range("A:A").Find(What:="Config_Infrastructure", LookIn:=xlValues)
-        Set FindLastInfrastructureSectionRow = .Range("A:A").Find(What:="Surfacide", LookIn:=xlValues)
+        Set FindLastInfrastructureSectionRow = .Range("A:A").Find(What:="Room Configuration", LookIn:=xlValues)
         Set FindInfrastructureRow = .Range("A:A").Find(What:="Configurator_Rm5Infrastructure", LookIn:=xlValues)
     End With
     
@@ -2672,6 +3040,16 @@ Private Sub AFICTab()
         Next j
     Next I
     
+    'Counter for AF Crating (0 if no AF23, 33, 43 or OB - Single/Tandem is selected)
+    counter = 0
+                    
+    'Initialize variables for AF Crating
+    iAF23 = 0
+    iAF33 = 0
+    iAF43 = 0
+    iOBSingle = 0
+    iOBTandem = 0
+    
     'Go through each item in the Selected listbox
     For j = 0 To Controls("AF_IC_Sel").ListCount - 1
         'Configure the Installation if the specific AF/LD is selected
@@ -2686,6 +3064,13 @@ Private Sub AFICTab()
                     installIF1 = "=F" & I
                 End If
             Next I
+            
+            'Update the AF Crating counter
+            counter = 1
+                            
+            'If AF23 is selected, record the QTY
+            iAF23 = CInt(Controls("AF_IC_Qty" & j).Value)
+            
         ElseIf Controls("AF_IC_Sel").List(j) = "AirFRAME AF33 – 9 Air Delivery Modules" Then
             For I = infrastructureRow To lastRow
                 If Range("A" & I).Value = "Install-AF33" Then
@@ -2697,6 +3082,13 @@ Private Sub AFICTab()
                     installIF1 = "=F" & I
                 End If
             Next I
+            
+            'Update the AF Crating counter
+            counter = 1
+                            
+            'If AF33 is selected, record the QTY
+            iAF33 = CInt(Controls("AF_IC_Qty" & j).Value)
+            
         ElseIf Controls("AF_IC_Sel").List(j) = "AirFRAME AF43 – 12 Air Delivery Modules" Then
             For I = infrastructureRow To lastRow
                 If Range("A" & I).Value = "Install-AF43" Then
@@ -2708,6 +3100,13 @@ Private Sub AFICTab()
                     installIF1 = "=F" & I
                 End If
             Next I
+            
+            'Update the AF Crating counter
+            counter = 1
+                            
+            'If AF43 is selected, record the QTY
+            iAF43 = CInt(Controls("AF_IC_Qty" & j).Value)
+            
         ElseIf Controls("AF_IC_Sel").List(j) = "LEDiffuser - 1 Air Delivery Module" Then
             For I = infrastructureRow To lastRow
                 If Range("A" & I).Value = "Install-LD11" Then
@@ -2741,8 +3140,48 @@ Private Sub AFICTab()
                     installIF1 = "=F" & I
                 End If
             Next I
+        ElseIf Controls("AF_IC_Sel").List(j) = "Outboard Equipment Mount - Single" Then
+                    
+            'Update the AF Crating counter
+            counter = 1
+                        
+            'If OB - Single is selected, record the QTY
+            iOBSingle = CInt(Controls("AF_IC_Qty" & j).Value)
+                        
+        ElseIf Controls("AF_IC_Sel").List(j) = "Outboard Equipment Mount - Tandem" Then
+                        
+            'Update the AF Crating counter
+            counter = 1
+                            
+            'If OB - Tandem is selected, record the QTY
+            iOBTandem = CInt(Controls("AF_IC_Qty" & j).Value)
         End If
     Next j
+    
+    'If counter of AF Crating is 1, go to AF Crating line item to QTY it
+    If counter = 1 Then
+        For I = infrastructureRow To lastRow
+            If Range("A" & I).Value = "Crating - AF" Then
+                            
+                'Specify the AF-Crating to be of Room 5 - prices will be taken from StandardList
+                Range("A" & I).Value = "Crating - AF - Room 5"
+                                
+                'Unit QTY is always kept at 1 per room
+                Range("C" & I).Value = 1
+                                
+                'Ext QTY matches the Room QTY
+                Range("E" & I).Value = Range("E" & infrastructureRow).Value
+            End If
+        Next I
+                        
+        'Calc the cost USD for AF Crating in StandardList
+        With Sheets("StandardList")
+            Set FindAFCratingRow = .Range("B:B").Find(What:="Crating - AF - Room 5", LookIn:=xlValues)
+            AFCratingRow = FindAFCratingRow.Row
+                            
+            .Range("E" & AFCratingRow).Formula = "=" & iAF23 & "*" & AFCrating(1) & "+" & iAF33 & "*" & AFCrating(2) & "+" & iAF43 & "*" & AFCrating(3) & "+" & iOBSingle & "*" & AFCrating(4) & "+" & iOBTandem & "*" & AFCrating(5)
+        End With
+    End If
     
     'Add details to Configurator table below pricing summary
     Rows(configuratorTableRow & ":" & configuratorTableRow).Select
@@ -2757,8 +3196,9 @@ Private Sub AFICTab()
     Range("A" & configuratorTableRow).Font.ColorIndex = 1
     
     'Fill in the rest of the columns
-    Range("B" & configuratorTableRow).Value = Worksheets("Proposal").Range("B" & I).Value
+    Range("B" & configuratorTableRow).Value = Range("B" & I).Value
     Range("G" & configuratorTableRow).Formula = installIF1
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -2868,8 +3308,8 @@ Private Sub IntegrationTab()
         For I = firstConfigDICableRow To lastConfigDICableRow
             .Range("G" & I).Value = ""
         Next I
-        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
-            .Range("G" & I).Value = ""
+        For I = firstConfigDICableRow To lastConfigDICableRow
+            .Range("F" & I).Value = ""
         Next I
         
         'Specify the QTY for each DI in selected listbox
@@ -2908,7 +3348,7 @@ Private Sub IntegrationTab()
                 End If
             Next j
         Next I
-        For I = firstConfigDIAudioRow To lastConfigDIOtherAccRow
+        For I = firstConfigDIAudioRow To lastConfigDIAudioRow
             For j = 0 To Controls("DI_Sel").ListCount - 1
                 If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
                     .Range("G" & I).Value = CInt(Controls("DI_Qty" & j).Value)
@@ -2929,17 +3369,10 @@ Private Sub IntegrationTab()
                 End If
             Next j
         Next I
-        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
-            For j = 0 To Controls("DI_Sel").ListCount - 1
-                If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
-                    .Range("G" & I).Value = CInt(Controls("DI_Qty" & j).Value)
-                End If
-            Next j
-        Next I
     End With
     
     'Update progress bar label and indicator
-    ProgressBar.ProgressBar1.Value = 30
+    ProgressBar.ProgressBar1.Value = 35
     ProgressBar.Label.Caption = "Exporting Digital Integration data..."
     ProgressBar.Repaint
     
@@ -2947,7 +3380,7 @@ Private Sub IntegrationTab()
         'First and last row for Integration to be copied
         'Find row number after Config_Integration heading as first row, and row number before ___ heading as last row
         Set FindFirstIntegrationSectionRow = .Range("A:A").Find(What:="Config_Integration", LookIn:=xlValues)
-        Set FindLastIntegrationSectionRow = .Range("A:A").Find(What:="Monitors", LookIn:=xlValues)
+        Set FindLastIntegrationSectionRow = .Range("A:A").Find(What:="Slings", LookIn:=xlValues)
         Set FindIntegrationRow = .Range("A:A").Find(What:="Configurator_Rm5Integration", LookIn:=xlValues)
     End With
     
@@ -2988,9 +3421,8 @@ Private Sub IntegrationTab()
                     Range("E" & I).Value = CInt(Controls("DI_Qty" & j).Value)
                     Range("C" & I).Value = CInt(Controls("DI_Qty" & j).Value)
                 Else
-                    'Multiply the local DI QTY with Room QTY
+                    'If in Room Configuration mode, multiply the local DI QTY with Room QTY
                     Range("E" & I).Value = CInt(Controls("DI_Qty" & j).Value) * CInt(Controls("Room5No").Value)
-
                     Range("C" & I).Value = CInt(Controls("DI_Qty" & j).Value)
                 End If
             End If
@@ -3042,7 +3474,8 @@ Private Sub IntegrationTab()
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Worksheets("Proposal").Range("B" & I).Value
     Range("G" & configuratorTableRow).Formula = installI1
-    Range("E" & configuratorTableRow).Formula = Range("G" & configuratorTableRow).Formula
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
+    Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
     'Calculate the OPM for Digital Integration in Variable worksheet
@@ -3111,6 +3544,179 @@ Private Sub IntegrationTab()
         
     Sheets("Proposal").Activate
 End Sub
+    '       '
+'Sling for Save button
+'
+Private Sub SlingTab()
+
+Unprotect
+
+    'Zero out Sling textboxes if empty
+    For j = 0 To qtySling
+        If Controls("Sling_Qty" & j).Value = "" Then
+            Controls("Sling_Qty" & j).Value = 0
+        End If
+    Next j
+                        
+    'Store user inputs into Configurator worksheet to be loaded when the Configurator is used next time
+    With Sheets("Configurator")
+                            
+        'Clear Sling if previously configured
+        For I = firstConfigSlingRow To lastConfigSlingRow
+            .Range("G" & I).Value = ""
+        Next I
+                            
+        'Specify the QTY for each Sling in selected listbox
+        For I = firstConfigSlingRow To lastConfigSlingRow
+            For j = 0 To Controls("SlingSel").ListCount - 1
+                If .Range("B" & I).Value = Controls("SlingSel").List(j) Then
+                    .Range("G" & I).Value = CInt(Controls("Sling_Qty" & j).Value)
+                End If
+            Next j
+        Next I
+    End With
+                        
+    'Update progress bar label and indicator
+    ProgressBar.ProgressBar1.Value = 30
+    ProgressBar.Label.Caption = "Exporting Sling data..."
+    ProgressBar.Repaint
+                    
+    With Sheets("Proposal")
+        'First and last row for Slings to be copied to above RoomConfig_3 row
+        'Find row number for Config_Sling as first row, and row number before Configurator as last row
+        Set FindFirstSlingRow = .Range("A:A").Find(What:="Slings", LookIn:=xlValues)
+        Set FindLastSlingRow = .Range("A:A").Find(What:="AirFRAME", LookIn:=xlValues)
+        Set FindSlingRow = .Range("A:A").Find(What:="Configurator_Rm5SlingEnd", LookIn:=xlValues)
+        Set FindSlingHeadingRow = .Range("A:A").Find(What:="Config_Rm5SlingHeading", LookIn:=xlValues)
+    End With
+                    
+    firstSlingRow = FindFirstSlingRow.Row + 1
+    lastSlingRow = FindLastSlingRow.Row - 1
+    slingRow = FindSlingRow.Row
+    slingHeadingRow = FindSlingHeadingRow.Row
+                        
+    'Rename Sling heading with room name and quantify it
+    Range("B" & slingHeadingRow).Value = Controls("Room5Name").Value & " - Slings"
+    Range("E" & slingHeadingRow).Value = CInt(Controls("Room5No").Value)
+                        
+    'Go through each Sling in the Main Product List
+    For I = firstSlingRow To lastSlingRow
+        'Go through each item in the Selected listbox
+        For j = 0 To Controls("SlingSel").ListCount - 1
+            If Range("B" & I).Value = Controls("SlingSel").List(j) Then
+                            
+                'Copy and paste the relevant line item row into the Configurator section, and export the user input data into the relevant cells
+                Rows(I & ":" & I).Select
+                Application.CutCopyMode = False
+                Selection.Copy
+                Rows(slingRow & ":" & slingRow).Select
+                Selection.Insert Shift:=xlDown
+                                    
+                'Multiply the local QTY with Room QTY
+                Range("E" & slingRow).Value = CInt(Controls("Sling_Qty" & j).Value) * CInt(Controls("Room5No").Value)
+                                
+                'Unit QTY for column C -> QTY entered by user per room/config
+                Range("C" & slingRow).Value = CInt(Controls("Sling_Qty" & j).Value)
+                                
+                'Keep the same order as selected listbox
+                slingRow = slingRow + 1
+            End If
+        Next j
+    Next I
+                    
+    'Find row number of last row of Sling line items
+    Set FindLastRow = Range("A:A").Find(What:="Configurator_Rm5SlingEnd", LookIn:=xlValues)
+    lastRow = FindLastRow.Row - 1
+                    
+    With Sheets("Proposal")
+        'Find row number in Configurator Table to insert Sling summary
+        Set FindConfiguratorTableRow = .Range("A:A").Find(What:="ConfiguratorTable_Rm5", LookIn:=xlValues)
+    End With
+    configuratorTableRow = FindConfiguratorTableRow.Row + 1
+                    
+    'Add details to Configurator table below pricing summary
+    Rows(configuratorTableRow & ":" & configuratorTableRow).Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    Selection.Insert Shift:=xlDown
+                    
+    I = slingHeadingRow
+                    
+    'Equate Column A to the Room Name with default font color
+    Range("A" & configuratorTableRow).Value = Controls("Room5Name").Value
+    Range("A" & configuratorTableRow).Font.ColorIndex = 1
+                    
+    'Fill in the rest of the columns
+    Range("B" & configuratorTableRow).Formula = Range("B" & I).Value
+    Range("G" & configuratorTableRow).Formula = "0"
+    Range("H" & configuratorTableRow).Formula = Range("G" & configuratorTableRow).Formula
+    Range("E" & configuratorTableRow).Formula = Range("G" & configuratorTableRow).Formula
+    Range("F" & configuratorTableRow).Formula = "=G" & I
+                    
+    'No OPM for slings as they are made of cloth/fabric and are not serviceable equipment
+    'Add a bracket to the formula for Room calculations
+    Sheets("Tables").Activate
+    opmSlingFormula = opmSlingFormula & "Proposal!G" & I & ")"
+    Range("Config_Rm5Slings").Formula = opmSlingFormula
+                    
+    With Sheets("Tables")
+        'First and last row for Configurator to be included in Tables worksheet
+        Set FindConfiguratorRow = .Range("B:B").Find(What:="Configurator_Room5", LookIn:=xlValues)
+        Set FindConfiguratorEndRow = .Range("B:B").Find(What:="Configurator_End_Rm5", LookIn:=xlValues)
+    End With
+                    
+    'First and last row for Configurator section in Tables worksheet
+    configuratorRow = FindConfiguratorRow.Row + 1
+    configuratorEndRow = FindConfiguratorEndRow.Row
+                    
+    j = configuratorRow
+    k = configuratorEndRow
+                    
+    'Add details to Configurator section in Tables worksheet
+    Sheets("Tables").Activate
+    Rows(k & ":" & k).Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    Rows(j & ":" & j).Select
+    Selection.Insert Shift:=xlDown
+                    
+    'Fill in the relevant columns
+    Range("B" & j).Value = Worksheets("Proposal").Range("B" & I).Value
+    Range("B" & j).Font.ColorIndex = 1
+    Worksheets("Proposal").Range("A" & I).Copy Worksheets("Tables").Range("C" & j)
+                
+    Range("E" & j).Formula = "=Proposal!E" & I
+    Range("F" & j).Formula = "=Proposal!D" & I
+    Range("G" & j).Formula = "=Proposal!F" & I
+    Range("H" & j).Formula = "=Proposal!G" & I
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+                
+    'Add the What-If table at Tables worksheet
+    With Sheets("Tables")
+        'Row for Configurator items to be included in the What-If table
+        Set FindWhatIfStartRow = .Range("Q:Q").Find(What:="WhatIf_Rm5Start", LookIn:=xlValues)
+    End With
+    whatIfStartRow = FindWhatIfStartRow.Row + 1
+        
+    'Add details to What-If table in Tables worksheet
+    Rows(whatIfStartRow & ":" & whatIfStartRow).Select
+    Application.CutCopyMode = False
+    Selection.Copy
+    Selection.Insert Shift:=xlDown
+                    
+    'Fill in the relevant columns
+    Range("Q" & whatIfStartRow) = Controls("Room5Name").Value
+    Range("Q" & whatIfStartRow).Font.ColorIndex = 1
+                    
+    Range("R" & whatIfStartRow).Formula = "=Proposal!B" & I
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
+                    
+    Sheets("Proposal").Activate
+End Sub
 '
 'Show/hide tabs for Lights
 '
@@ -3164,7 +3770,7 @@ End Sub
 '
 'ComboBox for Description
 '
-'Room 4
+'Room 5
 Private Sub Room5Description_DropButtonClick()
     Room5Description.List = roomDesc
 End Sub
@@ -3245,7 +3851,7 @@ End Sub
 Private Sub FindiCE30mLightAccessories(productInt As Integer)
     With Sheets("Configurator")
         Set FindFirstLiCEAccRow = .Range("B:B").Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
-        Set FindLastLiCEAccRow = .Range("B:B").Find(What:="Accessories - Mira 70", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
     End With
 
     'First and last row for Light Accessories
@@ -3259,7 +3865,7 @@ Private Sub FindiCE30mLightAccessories(productInt As Integer)
 End Sub
 Private Sub FindMiraLightAccessories(productInt As Integer)
     With Sheets("Configurator")
-        Set FindFirstLMiraAccRow = .Range("B:B").Find(What:="Accessories - Mira 70", LookIn:=xlValues)
+        Set FindFirstLMiraAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
         Set FindLastLMiraAccRow = .Range("B:B").Find(What:="Pendants", LookIn:=xlValues)
     End With
 
@@ -3306,6 +3912,8 @@ Private Sub L1Vega_Click()
     L1GammaFrame.Visible = False
     
     Call ClearLightAcc(1)
+    
+    Call FindMiraLightAccessories(1)
 End Sub
 
 Private Sub L1Gamma_Click()
@@ -3348,6 +3956,8 @@ Private Sub L2Vega_Click()
     L2GammaFrame.Visible = False
     
     Call ClearLightAcc(2)
+    
+    Call FindMiraLightAccessories(2)
 End Sub
 
 Private Sub L2Gamma_Click()
@@ -3390,6 +4000,8 @@ Private Sub L3Vega_Click()
     L3GammaFrame.Visible = False
     
     Call ClearLightAcc(3)
+    
+    Call FindMiraLightAccessories(3)
 End Sub
 
 Private Sub L3Gamma_Click()
@@ -3432,6 +4044,8 @@ Private Sub L4Vega_Click()
     L4GammaFrame.Visible = False
     
     Call ClearLightAcc(4)
+    
+    Call FindMiraLightAccessories(4)
 End Sub
 
 Private Sub L4Gamma_Click()
@@ -3474,6 +4088,8 @@ Private Sub L5Vega_Click()
     L5GammaFrame.Visible = False
     
     Call ClearLightAcc(5)
+    
+    Call FindMiraLightAccessories(5)
 End Sub
 
 Private Sub L5Gamma_Click()
@@ -3498,11 +4114,11 @@ Private Sub FindPendantAccessories(productInt As Integer)
 
     With Sheets("Configurator")
         Set FindFirstPAccRow = .Range("B:B").Find(What:="Accessories - Pendants", LookIn:=xlValues)
-        Set FindLastPAccRow = .Range("B:B").Find(What:="Integration", LookIn:=xlValues)
+        Set FindLastPAccRow = .Range("B:B").Find(What:="End_Pendant", LookIn:=xlValues)
 
         'First and last row for Pendant Accessories
         firstPAccRow = FindFirstPAccRow.Row + 1
-        lastPAccRow = FindLastPAccRow.Row - 2
+        lastPAccRow = FindLastPAccRow.Row - 1
     End With
 
     'Add Accessories to listbox
@@ -3513,6 +4129,7 @@ End Sub
 
 'Std Config for ANA pendants (top-down)
 Private Sub AnaPendantOptions(productInt As Integer)
+    Controls("Pendant" & productInt & "Name") = "Std Ana"
     Controls("P" & productInt & "Con1ArmDouble") = True
     Controls("P" & productInt & "Con1ArmFixed") = False
     Controls("P" & productInt & "Con1ArmMotorised") = True
@@ -3541,6 +4158,7 @@ End Sub
 
 'Std Config for EQ pendants (top-down)
 Private Sub EQPendantOptions(productInt As Integer)
+    Controls("Pendant" & productInt & "Name") = "Std EQ"
     Controls("P" & productInt & "Con1ArmDouble") = True
     Controls("P" & productInt & "Con1ArmFixed") = True
     Controls("P" & productInt & "Con1ArmMotorised") = False
@@ -3567,22 +4185,23 @@ Private Sub EQPendantOptions(productInt As Integer)
     Controls("Pendant" & productInt & "Description") = "Std EQ"
 
     'Specified accessories
-    Controls("Pendant" & productInt & "AccSel").AddItem "Console LT Shelf 457mm (w) x 585mm (d) w Side Rails"
     Controls("Pendant" & productInt & "AccSel").AddItem "Console LT Shelf 457mm (w) x 585mm (d) w Front Handle"
-    Controls("P" & productInt & "_Acc_Qty0").Value = "2"
-    Controls("P" & productInt & "_Acc_Qty1").Value = "1"
+    Controls("Pendant" & productInt & "AccSel").AddItem "Console LT Shelf 457mm (w) x 585mm (d) w Side Rails"
+    Controls("P" & productInt & "_Acc_Qty0").Value = "1"
+    Controls("P" & productInt & "_Acc_Qty1").Value = "2"
 End Sub
 
 'Std Config for ICU pendants (top-down)
 Private Sub ICUPendantOptions(productInt As Integer)
+    Controls("Pendant" & productInt & "Name") = "Std ICU"
     Controls("P" & productInt & "Con1ArmDouble") = True
     Controls("P" & productInt & "Con1ArmFixed") = True
     Controls("P" & productInt & "Con1ArmMotorised") = False
     Controls("P" & productInt & "Con1ArmConfig") = "F1000-F800, F800-F800"
     Controls("P" & productInt & "Con1Vertical") = True
-    Controls("P" & productInt & "Con1Console") = "L 790 x W 320 x D 229mm"
+    Controls("P" & productInt & "Con1Console") = "L 1295 x W 320 x D 356mm"
     Controls("P" & productInt & "Con2Vertical") = True
-    Controls("P" & productInt & "Con2Console") = "L 790 x W 320 x D 229mm"
+    Controls("P" & productInt & "Con2Console") = "L 1295 x W 320 x D 356mm"
 
     'Console 1
     Controls("Suction_P" & productInt & "Con1") = "3"
@@ -3624,8 +4243,67 @@ Private Sub ICUPendantOptions(productInt As Integer)
     Controls("AV_P" & productInt & "Con2") = "1 x Quad Data Outlet"
 End Sub
 
+'Std Config for PLP pendants (top-down)
+Private Sub PLPPendantOptions(productInt As Integer)
+    Controls("Pendant" & productInt & "Name") = "Std PLP"
+    Controls("P" & productInt & "Con1ArmDouble") = True
+    Controls("P" & productInt & "Con1ArmFixed") = True
+    Controls("P" & productInt & "Con1ArmMotorised") = False
+    Controls("P" & productInt & "Con1ArmConfig") = "Rev F1000-F800, F800-F800"
+    Controls("P" & productInt & "Con1Vertical") = True
+    Controls("P" & productInt & "Con1Console") = "L 1295 x W 320 x D 356mm"
+    Controls("P" & productInt & "Con2Vertical") = True
+    Controls("P" & productInt & "Con2Console") = "L 1295 x W 320 x D 356mm"
+                        
+    'Console 1
+    Controls("Suction_P" & productInt & "Con1") = "3"
+    Controls("MedAir_P" & productInt & "Con1") = "1"
+    Controls("CO2_P" & productInt & "Con1") = ""
+    Controls("N2O_P" & productInt & "Con1") = ""
+    Controls("Oxygen_P" & productInt & "Con1") = "2"
+    Controls("ToolAir_P" & productInt & "Con1") = ""
+    Controls("Scavenge_P" & productInt & "Con1") = ""
+    Controls("Dia68_P" & productInt & "Con1") = "1"
+    Controls("UPS_Blue_P" & productInt & "Con1") = "2"
+    Controls("ESS_Red_10Amp_P" & productInt & "Con1") = "8"
+    Controls("ESS_Red_20Amp_P" & productInt & "Con1") = ""
+    Controls("ESS_Red_15Amp_P" & productInt & "Con1") = ""
+    Controls("PowerInd_P" & productInt & "Con1") = "2"
+    Controls("RCD_P" & productInt & "Con1") = ""
+    Controls("Earth_P" & productInt & "Con1") = ""
+    Controls("DataRun_P" & productInt & "Con1") = ""
+    Controls("AV_P" & productInt & "Con1") = "1 x Quad Data Outlet"
+    Controls("Pendant" & productInt & "Description") = "Std PLP"
+                        
+    'Console 2
+    Controls("Suction_P" & productInt & "Con2") = "3"
+    Controls("MedAir_P" & productInt & "Con2") = "1"
+    Controls("CO2_P" & productInt & "Con2") = ""
+    Controls("N2O_P" & productInt & "Con2") = ""
+    Controls("Oxygen_P" & productInt & "Con2") = "2"
+    Controls("ToolAir_P" & productInt & "Con2") = ""
+    Controls("Scavenge_P" & productInt & "Con2") = ""
+    Controls("Dia68_P" & productInt & "Con2") = "1"
+    Controls("UPS_Blue_P" & productInt & "Con2") = "2"
+    Controls("ESS_Red_10Amp_P" & productInt & "Con2") = "8"
+    Controls("ESS_Red_20Amp_P" & productInt & "Con2") = ""
+    Controls("ESS_Red_15Amp_P" & productInt & "Con2") = ""
+    Controls("PowerInd_P" & productInt & "Con2") = "2"
+    Controls("RCD_P" & productInt & "Con2") = ""
+    Controls("Earth_P" & productInt & "Con2") = ""
+    Controls("DataRun_P" & productInt & "Con2") = ""
+    Controls("AV_P" & productInt & "Con2") = "1 x Quad Data Outlet"
+                            
+    'Specified accessories
+    Controls("Pendant" & productInt & "AccSel").AddItem "Patient Lift Track, integrated into boom"
+    Controls("Pendant" & productInt & "AccSel").AddItem "Second Handle"
+    Controls("P" & productInt & "_Acc_Qty0").Value = "1"
+    Controls("P" & productInt & "_Acc_Qty1").Value = "2"
+End Sub
+
 'Clear/Reset options if Std Config is selected previously
 Private Sub ClearPendantOptions(productInt As Integer)
+    Controls("Pendant" & productInt & "Name") = Sheets("Configurator").Range("P" & productInt & "Rm5Name")
     Controls("P" & productInt & "Con1ArmSingle") = False
     Controls("P" & productInt & "Con1ArmDouble") = False
     Controls("P" & productInt & "Con1ArmFixed") = False
@@ -3656,10 +4334,30 @@ Private Sub ClearPendantOptions(productInt As Integer)
     Controls("Earth_P" & productInt & "Con1") = ""
     Controls("DataRun_P" & productInt & "Con1") = ""
     Controls("AV_P" & productInt & "Con1") = ""
+
+    'Console 2
+    Controls("Suction_P" & productInt & "Con2") = ""
+    Controls("MedAir_P" & productInt & "Con2") = ""
+    Controls("CO2_P" & productInt & "Con2") = ""
+    Controls("N2O_P" & productInt & "Con2") = ""
+    Controls("Oxygen_P" & productInt & "Con2") = ""
+    Controls("ToolAir_P" & productInt & "Con2") = ""
+    Controls("Scavenge_P" & productInt & "Con2") = ""
+    Controls("Dia68_P" & productInt & "Con2") = ""
+    Controls("UPS_Blue_P" & productInt & "Con2") = ""
+    Controls("ESS_Red_10Amp_P" & productInt & "Con2") = ""
+    Controls("ESS_Red_20Amp_P" & productInt & "Con2") = ""
+    Controls("ESS_Red_15Amp_P" & productInt & "Con2") = ""
+    Controls("PowerInd_P" & productInt & "Con2") = ""
+    Controls("RCD_P" & productInt & "Con2") = ""
+    Controls("Earth_P" & productInt & "Con2") = ""
+    Controls("DataRun_P" & productInt & "Con2") = ""
+    Controls("AV_P" & productInt & "Con2") = ""
+    
     Controls("Pendant" & productInt & "Description") = ""
 End Sub
 '
-'Pendant Solo/Tandem options
+'Pendant options
 '
 'Option to load Std Config for ANA, Pendant 1
 Private Sub Pendant1Ana_Click()
@@ -3696,6 +4394,17 @@ Private Sub Pendant1StdICU_Click()
     Call FindPendantAccessories(1)
     
     Call ICUPendantOptions(1)
+End Sub
+'Option to load Std Config for PLP, Pendant 1
+Private Sub Pendant1PLP_Click()
+    Pendant1_Con2.Visible = True
+    Pendant1Arm.Visible = True
+    Pendant1FM.Visible = True
+    Pendant1Console1.Visible = True
+    Pendant1Console2.Visible = True
+    Call FindPendantAccessories(1)
+                    
+    Call PLPPendantOptions(1)
 End Sub
 'Option to load Solo Pendant, Pendant 1
 Private Sub Pendant1S_Click()
@@ -3776,7 +4485,17 @@ Private Sub Pendant2StdICU_Click()
     
     Call ICUPendantOptions(2)
 End Sub
-
+'Option to load Std Config for PLP, Pendant 2
+Private Sub Pendant2PLP_Click()
+    Pendant2_Con2.Visible = True
+    Pendant2Arm.Visible = True
+    Pendant2FM.Visible = True
+    Pendant2Console1.Visible = True
+    Pendant2Console2.Visible = True
+    Call FindPendantAccessories(2)
+                    
+    Call PLPPendantOptions(2)
+End Sub
 'Option to Solo Pendant, Pendant 2
 Private Sub Pendant2S_Click()
     Pendant2_Con2.Visible = False
@@ -3855,6 +4574,17 @@ Private Sub Pendant3StdICU_Click()
     Call FindPendantAccessories(3)
     
     Call ICUPendantOptions(3)
+End Sub
+'Option to load Std Config for PLP, Pendant 3
+Private Sub Pendant3PLP_Click()
+    Pendant3_Con2.Visible = True
+    Pendant3Arm.Visible = True
+    Pendant3FM.Visible = True
+    Pendant3Console1.Visible = True
+    Pendant3Console2.Visible = True
+    Call FindPendantAccessories(3)
+                    
+    Call PLPPendantOptions(3)
 End Sub
 'Option to load Solo Pendant, Pendant 3
 Private Sub Pendant3S_Click()
@@ -3935,6 +4665,17 @@ Private Sub Pendant4StdICU_Click()
     
     Call ICUPendantOptions(4)
 End Sub
+'Option to load Std Config for PLP, Pendant 4
+Private Sub Pendant4PLP_Click()
+    Pendant4_Con2.Visible = True
+    Pendant4Arm.Visible = True
+    Pendant4FM.Visible = True
+    Pendant4Console1.Visible = True
+    Pendant4Console2.Visible = True
+    Call FindPendantAccessories(4)
+                    
+    Call PLPPendantOptions(4)
+End Sub
 'Option to load Solo Pendant, Pendant 4
 Private Sub Pendant4S_Click()
     Pendant4_Con2.Visible = False
@@ -4014,6 +4755,17 @@ Private Sub Pendant5StdICU_Click()
     
     Call ICUPendantOptions(5)
 End Sub
+'Option to load Std Config for PLP, Pendant 5
+Private Sub Pendant5PLP_Click()
+    Pendant5_Con2.Visible = True
+    Pendant5Arm.Visible = True
+    Pendant5FM.Visible = True
+    Pendant5Console1.Visible = True
+    Pendant5Console2.Visible = True
+    Call FindPendantAccessories(5)
+                    
+    Call PLPPendantOptions(5)
+End Sub
 'Option to load Solo Pendant, Pendant 5
 Private Sub Pendant5S_Click()
     Pendant5_Con2.Visible = False
@@ -4082,6 +4834,15 @@ Private Sub DI_Yes_Click()
 End Sub
 Private Sub DI_No_Click()
     DI_Frame.Visible = False
+End Sub
+'
+'Slings Yes/No Options
+'
+Private Sub SlingYes_Click()
+    SlingFrame.Visible = True
+End Sub
+Private Sub SlingNo_Click()
+    SlingFrame.Visible = False
 End Sub
 '
 'Name changes tab for the specific page
@@ -4164,6 +4925,11 @@ End Sub
 Private Sub L1MiraLight_DropButtonClick()
     L1MiraLight.List = LightMira
 End Sub
+        
+'Vega 80
+Private Sub L1VegaItem_DropButtonClick()
+    L1VegaItem.List = LightVega
+End Sub
 'Light 2
 'iCE 30m
 Private Sub L2iCEItem_DropButtonClick()
@@ -4173,6 +4939,11 @@ End Sub
 'Mira 70
 Private Sub L2MiraLight_DropButtonClick()
     L2MiraLight.List = LightMira
+End Sub
+
+'Vega 80
+Private Sub L2VegaItem_DropButtonClick()
+    L2VegaItem.List = LightVega
 End Sub
 'Light 3
 'iCE 30m
@@ -4184,6 +4955,11 @@ End Sub
 Private Sub L3MiraLight_DropButtonClick()
     L3MiraLight.List = LightMira
 End Sub
+
+'Vega 80
+Private Sub L3VegaItem_DropButtonClick()
+    L3VegaItem.List = LightVega
+End Sub
 'Light 4
 'iCE 30m
 Private Sub L4iCEItem_DropButtonClick()
@@ -4193,6 +4969,11 @@ End Sub
 'Mira 70
 Private Sub L4MiraLight_DropButtonClick()
     L4MiraLight.List = LightMira
+End Sub
+        
+'Vega 80
+Private Sub L4VegaItem_DropButtonClick()
+    L4VegaItem.List = LightVega
 End Sub
 'Light 5
 'iCE 30m
@@ -4204,14 +4985,19 @@ End Sub
 Private Sub L5MiraLight_DropButtonClick()
     L5MiraLight.List = LightMira
 End Sub
+        
+'Vega 80
+Private Sub L5VegaItem_DropButtonClick()
+    L5VegaItem.List = LightVega
+End Sub
 '
 'ComboBox for Arm Config, Pendant
 'Subs (common functions) for Pendants
 'Drop button list for pendant arm config
 Private Sub PendantArmConfig(intProduct As Integer)
 
-'If ICU Pendant is selected, only show the arm configs relevant to ICU
-If Controls("Pendant" & intProduct & "ICU") = True Then
+'If ICU/PLP Pendant is selected, only show the arm configs relevant to ICU/PLP
+If Controls("Pendant" & intProduct & "ICU") = True Or Controls("Pendant" & intProduct & "StdICU") = True Or Controls("Pendant" & intProduct & "PLP") = True Then
 
     Controls("P" & intProduct & "Con1ArmConfig").List = ArmConfigICU
 
@@ -4464,6 +5250,21 @@ Private Sub DI_CBox2_Click()
     If DI_CBox2.Value = False Then
         For I = 0 To DI_Sel.ListCount - 1
             DI_Sel.Selected(I) = False
+        Next I
+    End If
+End Sub
+        
+'Slings
+Private Sub SlingCBox2_Click()
+    If SlingCBox2.Value = True Then
+        For I = 0 To SlingSel.ListCount - 1
+            SlingSel.Selected(I) = True
+        Next I
+    End If
+                    
+    If SlingCBox2.Value = False Then
+        For I = 0 To SlingSel.ListCount - 1
+            SlingSel.Selected(I) = False
         Next I
     End If
 End Sub
@@ -4758,24 +5559,33 @@ Private Sub FibreCabling_Add_Click()
     Next I
 End Sub
 
-'Listbox 9
-Private Sub OnceOff_DI_Add_Click()
-    For I = 0 To OnceOff_DI.ListCount - 1
-        If OnceOff_DI.Selected(I) = True Then DI_Sel.AddItem OnceOff_DI.List(I)
-    Next I
-    
-    'Deselect after add
-    For I = 0 To OnceOff_DI.ListCount - 1
-        OnceOff_DI.Selected(I) = False
-    Next I
-End Sub
-
 Private Sub DI_Remove_Click()
 
     counter = 0
     For I = 0 To DI_Sel.ListCount - 1
         If DI_Sel.Selected(I - counter) Then
             DI_Sel.RemoveItem (I - counter)
+            counter = counter + 1
+        End If
+    Next I
+End Sub
+    
+'Slings
+Private Sub SlingAdd_Click()
+    For I = 0 To Sling.ListCount - 1
+        If Sling.Selected(I) = True Then SlingSel.AddItem Sling.List(I)
+    Next I
+                        
+    'Deselect after add
+    For I = 0 To Sling.ListCount - 1
+        Sling.Selected(I) = False
+    Next I
+End Sub
+Private Sub SlingRemove_Click()
+counter = 0
+    For I = 0 To SlingSel.ListCount - 1
+        If SlingSel.Selected(I - counter) Then
+            SlingSel.RemoveItem (I - counter)
             counter = counter + 1
         End If
     Next I
@@ -4804,10 +5614,12 @@ Application.Goto Reference:="Configurator"
 Call OptimizeCode_Begin
 
 'Number of QTY textboxes for all product categories
-qtyLight = 4
+qtyLight = 19
 qtyPendant = 19
 qtyAFIC = 19
 qtyAmicoAcc = 14
+qtyInt = 19
+qtySling = 14
 
 ' Declare dynamic array for product configs - Lights & Pendants (up to a max of 5)
 Set rg = ThisWorkbook.Worksheets("Configurator").Range("D1:H2")
@@ -4859,7 +5671,13 @@ Call AFCategory
 'Check if any Digital Integration have been configured
 Call DICategory
 
+'Check if any Slings have been configured
+Call SlingCategory
+
 Call OptimizeCode_End
+
+'Protect the workbook to prevent in-cell warnings and free-form editing after running and "closing" the Configurator
+Protect
 
     'Set Focus
     'PendantNo.SetFocus
@@ -4893,9 +5711,11 @@ Private Sub LightCategory()
         Controls("Light" & P(1, X) & "Name").Value = .Range("L" & P(1, X) & "Rm5Name")
         Controls("Light" & P(1, X) & "No").Value = .Range("L" & P(1, X) & "Rm5Qty")
         Controls("Light" & P(1, X) & "Description").Value = .Range("L" & P(1, X) & "Rm5Desc")
-        Controls("L" & P(1, X) & "iCEItem").Value = .Range("L" & P(1, X) & "Rm4iCE")
+        Controls("L" & P(1, X) & "iCEItem").Value = .Range("L" & P(1, X) & "Rm5iCE")
+        Controls("L" & P(1, X) & "4KCam").Value = .Range("L" & P(1, X) & "Rm54KCam")
         Controls("L" & P(1, X) & "CamAdder").Value = .Range("L" & P(1, X) & "Rm5CamAdder")
-        Controls("L" & P(1, X) & "MiraLight").Value = .Range("L" & P(1, X) & "Rm3Mira")
+        Controls("L" & P(1, X) & "MiraLight").Value = .Range("L" & P(1, X) & "Rm5Mira")
+        Controls("L" & P(1, X) & "VegaItem").Value = .Range("L" & P(1, X) & "Rm5Vega")
         
     'Initialize Options
         If .Range("L" & P(1, X) & "Rm5Type") = "iCE 30m" Then
@@ -5009,7 +5829,11 @@ Private Sub LightCategory()
         
         'Mira 70 lights
         LightMira(1) = "Mira LED 70, Ceiling Mount, Single, Extended Arm"
-        LightMira(2) = "Mira LED 70, Knuckle/Pendant Mount, Single, Extended Arm"
+        LightMira(2) = "Mira LED 70, Floor Stand, Extended Arm"
+        
+        'Vega 80 lights
+        LightVega(1) = "Vega 80, Ceiling Mount, Single, Extended Arm"
+        LightVega(2) = "Vega 80, Floor Stand, Extended Arm"
         
         'Generic descriptions for Lights (iCE30m)
         With Sheets("Variable")
@@ -5081,13 +5905,13 @@ Private Sub LightCategory()
     End With
 
         Set FindFirstLiCEAccRow = .Range(Rm5Range).Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
-        Set FindLastLiCEAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
     
         'First and last row for Light Accessories
         firstLiCEAccRow = FindFirstLiCEAccRow.Row + 1
         lastLiCEAccRow = FindLastLiCEAccRow.Row - 2
 
-        Set FindFirstLMiraAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70", LookIn:=xlValues)
+        Set FindFirstLMiraAccRow = .Range(Rm5Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
         Set FindLastLMiraAccRow = .Range(Rm5Range).Find(What:="Pendants", LookIn:=xlValues)
         
         'First and last row for Light Accessories
@@ -5106,7 +5930,7 @@ Private Sub LightCategory()
                 End If
             Next I
             
-        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
+        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Or Controls("L" & P(1, X) & "Vega").Value = True Then
         
             counter = 0
             For I = firstLMiraAccRow To lastLMiraAccRow
@@ -5166,6 +5990,8 @@ Private Sub PendantCategory()
             Controls("Pendant" & P(1, X) & "EQ").Value = True
         ElseIf .Range("P" & P(1, X) & "Rm5Type") = "Std ICU" Then
             Controls("Pendant" & P(1, X) & "StdICU").Value = True
+        ElseIf .Range("P" & P(1, X) & "Rm5Type") = "Std PLP" Then
+            Controls("Pendant" & P(1, X) & "PLP").Value = True
         End If
         
         'Console 1
@@ -5246,7 +6072,7 @@ Private Sub PendantCategory()
         Controls("Earth_P" & P(1, X) & "Con1").Value = .Range("P" & P(1, X) & "Rm5Con1Earth")
         Controls("AV_P" & P(1, X) & "Con1").Value = .Range("P" & P(1, X) & "Rm5Con1AV")
         Controls("DataRun_P" & P(1, X) & "Con1").Value = .Range("P" & P(1, X) & "Rm5Con1DataRun")
-        Controls("Dia68_P" & P(1, X) & "Con1").Value = .Range("P" & P(1, X) & "Rm5Con2Dia68")
+        Controls("Dia68_P" & P(1, X) & "Con1").Value = .Range("P" & P(1, X) & "Rm5Con1Dia68")
         
         'Console 2
         Controls("P" & P(1, X) & "Con2Console").Value = .Range("P" & P(1, X) & "Rm5Con2Console")
@@ -5311,7 +6137,7 @@ Private Sub PendantCategory()
             Set FindFirstArmConfigFDoubleRow = .Range("D:D").Find(What:="F800-F800", LookIn:=xlValues)
             Set FindLastArmConfigFDoubleRow = .Range("D:D").Find(What:="F1200-F1200", LookIn:=xlValues)
             Set FindFirstArmConfigTFDoubleRow = .Range("D:D").Find(What:="F800-F800, F800-F800", LookIn:=xlValues)
-            Set FindLastArmConfigTFDoubleRow = .Range("D:D").Find(What:="Reverse F1000-F800, F800-F800", LookIn:=xlValues)
+            Set FindLastArmConfigTFDoubleRow = .Range("D:D").Find(What:="Rev F1000-F1000, F1000-F1000", LookIn:=xlValues)
             Set FindFirstArmConfigMSingleRow = .Range("D:D").Find(What:="V800", LookIn:=xlValues)
             Set FindLastArmConfigMSingleRow = .Range("D:D").Find(What:="V1000", LookIn:=xlValues)
             Set FindFirstArmConfigMDoubleRow = .Range("D:D").Find(What:="F800-V750", LookIn:=xlValues)
@@ -5319,7 +6145,7 @@ Private Sub PendantCategory()
             Set FindFirstArmConfigTMDoubleRow = .Range("D:D").Find(What:="F800-V750, F800-F800", LookIn:=xlValues)
             Set FindLastArmConfigTMDoubleRow = .Range("D:D").Find(What:="F1000-V750, F1000-F1000", LookIn:=xlValues)
             Set FindFirstArmConfigICURow = .Range("D:D").Find(What:="F800-F800, F800-F800", LookIn:=xlValues)
-            Set FindLastArmConfigICURow = .Range("D:D").Find(What:="Reverse F1000-F800, F800-F800", LookIn:=xlValues)
+            Set FindLastArmConfigICURow = .Range("D:D").Find(What:="Rev F1000-F1000, F1000-F1000", LookIn:=xlValues)
             Set FindFirstConsoleVerticalRow = .Range("D:D").Find(What:="L 530 x W 320 x D 356mm", LookIn:=xlValues)
             Set FindLastConsoleVerticalRow = .Range("D:D").Find(What:="L 1295 x W 320 x D 460mm", LookIn:=xlValues)
             Set FindFirstConsoleLMCRow = .Range("D:D").Find(What:="C30 Short Version", LookIn:=xlValues)
@@ -5452,8 +6278,11 @@ Private Sub PendantCategory()
         
         'First and last row for Pendant Accessories
         firstPAccRow = FindFirstPAccRow.Row + 1
-        lastPAccRow = FindLastPAccRow.Row - 2
-        
+        lastPAccRow = FindLastPAccRow.Row - 1
+          
+        'Clear the Selected listbox first in case a std config is selected -> prevent doubling of line items
+        Controls("Pendant" & P(1, X) & "AccSel").Clear
+          
         counter = 0
         For I = firstPAccRow To lastPAccRow
             'Add non-zero quantity accessories into the Selected listbox, and its quantity into the relevant textbox
@@ -5470,7 +6299,7 @@ Private Sub PendantCategory()
 End Sub
 
 Private Sub AmicoCategory()
-'Amico Accessories across all rooms
+
 With Sheets("Configurator")
     Set FindFirstConfigAmicoAccRow = .Range("B:B").Find(What:="Amico Accessories", LookIn:=xlValues)
     Set FindLastConfigAmicoAccRow = .Range("B:B").Find(What:="End_AmicoAcc", LookIn:=xlValues)
@@ -5524,9 +6353,9 @@ With Sheets("Configurator")
     Set FindLastConfigAFLEDRow = .Range("B:B").Find(What:="Accessories - AF + IC", LookIn:=xlValues)
     
     Set FindFirstConfigAccRow = .Range("B:B").Find(What:="Accessories - AF + IC", LookIn:=xlValues)
-    Set FindLastConfigAccRow = .Range("B:B").Find(What:="AirFRAME Lighting", LookIn:=xlValues)
+    Set FindLastConfigAccRow = .Range("B:B").Find(What:="AirFRAME Indigo-Clean Lighting", LookIn:=xlValues)
     
-    Set FindFirstConfigInGridRow = .Range("B:B").Find(What:="AirFRAME Lighting", LookIn:=xlValues)
+    Set FindFirstConfigInGridRow = .Range("B:B").Find(What:="AirFRAME Indigo-Clean Lighting", LookIn:=xlValues)
     Set FindLastConfigInGridRow = .Range("B:B").Find(What:="Peripheral Lighting (Supply Only)", LookIn:=xlValues)
 
     Set FindFirstConfigIndCompRow = .Range("B:B").Find(What:="Peripheral Lighting (Supply Only)", LookIn:=xlValues)
@@ -5563,6 +6392,27 @@ With Sheets("Configurator")
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigIndCompRow & ":" & "B" & lastConfigIndCompRow)
         IndigoComponent.AddItem Cell.Value
     Next Cell
+    
+    'AF Crating costs
+    With Sheets("Variable")
+        Set FindFirstAFCratingRow = .Range("Q:Q").Find(What:="Crating", LookIn:=xlValues)
+        Set FindLastAFCratingRow = .Range("Q:Q").Find(What:="End of Crating", LookIn:=xlValues)
+                    
+        'First and last row of crating per unit rates (cost USD)
+        firstAFCratingRow = FindFirstAFCratingRow.Row + 1
+        lastAFCratingRow = FindLastAFCratingRow.Row - 1
+                        
+        'Dimension of AF Crating array
+        size = lastAFCratingRow - firstAFCratingRow + 1
+        ReDim AFCrating(size)
+                    
+        'Initialize AF Crating costs
+        counter = 1
+        For I = firstAFCratingRow To lastAFCratingRow
+            AFCrating(counter) = .Range("Q" & I).Value
+            counter = counter + 1
+        Next I
+    End With
     
     counter = 0
     For I = firstConfigAFLEDRow To lastConfigAFLEDRow
@@ -5643,9 +6493,6 @@ With Sheets("Configurator")
 
     Set FindFirstConfigDICableRow = .Range("B:B").Find(What:="Fibre Trunk Cabling", LookIn:=xlValues)
     Set FindLastConfigDICableRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
-    
-    Set FindFirstConfigDIOnceOffRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
-    Set FindLastConfigDIOnceOffRow = .Range("B:B").Find(What:="End_DI", LookIn:=xlValues)
 
     'First and last row for Surgical Monitor
     firstConfigDISMRow = FindFirstConfigDISMRow.Row + 1
@@ -5678,10 +6525,6 @@ With Sheets("Configurator")
     'First and last row for Fibre Trunk Cabling
     firstConfigDICableRow = FindFirstConfigDICableRow.Row + 1
     lastConfigDICableRow = FindLastConfigDICableRow.Row - 1
-    
-'    'First and last row for Once Off per Facility
-    firstConfigDIOnceOffRow = FindFirstConfigDIOnceOffRow.Row + 1
-    lastConfigDIOnceOffRow = FindLastConfigDIOnceOffRow.Row - 2
 
     'Add the relevant rows into the listboxes
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDISMRow & ":" & "B" & lastConfigDISMRow)
@@ -5714,10 +6557,6 @@ With Sheets("Configurator")
     
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDICableRow & ":" & "B" & lastConfigDICableRow)
         FibreCabling.AddItem Cell.Value
-    Next Cell
-    
-    For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDIOnceOffRow & ":" & "B" & lastConfigDIOnceOffRow)
-        OnceOff_DI.AddItem Cell.Value
     Next Cell
     
     counter = 0
@@ -5792,19 +6631,48 @@ With Sheets("Configurator")
             counter = counter + 1
         End If
     Next I
-    
-    For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
-        'Add non-zero quantity Once Off per facility items into the Selected listbox, and its quantity into the relevant textbox
+End With
+
+'Initialize checkboxes
+Controls("DI_CBox2").Value = False
+End Sub
+
+Private Sub SlingCategory()
+
+With Sheets("Configurator")
+    Set FindFirstConfigSlingRow = .Range("B:B").Find(What:="Slings", LookIn:=xlValues)
+    Set FindLastConfigSlingRow = .Range("B:B").Find(What:="End_Sling", LookIn:=xlValues)
+                
+    'First and last row for Amico Accessories
+    firstConfigSlingRow = FindFirstConfigSlingRow.Row + 3
+    lastConfigSlingRow = FindLastConfigSlingRow.Row - 2
+                
+    'Hide/Unhide Amico Accessories objects
+    If .Range("SlingOptionRm5").Value = True Then
+        Controls("SlingYes").Value = True
+        Controls("SlingNo").Value = False
+    Else
+        Controls("SlingYes").Value = False
+        Controls("SlingNo").Value = True
+    End If
+                
+    For Each Cell In Worksheets("Configurator").Range("B" & firstConfigSlingRow & ":" & "B" & lastConfigSlingRow)
+        Sling.AddItem Cell.Value
+    Next Cell
+                
+    counter = 0
+    For I = firstConfigSlingRow To lastConfigSlingRow
+        'Add non-zero quantity accessories into the Selected listbox, and its quantity into the relevant textbox
         If .Range("G" & I).Value > 0 And .Range("G" & I).Value <> "" Then
-            Controls("DI_Sel").AddItem .Range("B" & I).Value
-            Controls("DI_Qty" & counter).Value = .Range("G" & I).Value
+            Controls("SlingSel").AddItem .Range("B" & I).Value
+            Controls("Sling_Qty" & counter).Value = .Range("G" & I).Value
             counter = counter + 1
         End If
     Next I
 End With
 
 'Initialize checkboxes
-Controls("DI_CBox2").Value = False
+Controls("SlingCBox2").Value = False
 End Sub
 
 '
@@ -5923,29 +6791,125 @@ Private Sub Pendant5No_KeyPress(ByVal KeyAscii As MSForms.ReturnInteger)
     End Select
 End Sub
 '
-'Change Button color if hovered on
+'PURPOSE: Make sure users can only enter integers for Qty textboxes (Pendant)
 '
 Private Sub OKButtonInactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'PURPOSE: Make Save Button appear Green when hovered on
+'PURPOSE: Make Save Button appear Blue when hovered on
   CancelButtonInactive.Visible = True
   OKButtonInactive.Visible = False
-  ClearButtonInactive.Visible = True
 End Sub
 Private Sub CancelButtonInactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'PURPOSE: Make Close Button appear Green when hovered on
+'PURPOSE: Make Close Button appear Blue when hovered on
     CancelButtonInactive.Visible = False
     OKButtonInactive.Visible = True
-    ClearButtonInactive.Visible = True
 End Sub
-Private Sub ClearButtonInactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
-'PURPOSE: Make Clear Button appear Green when hovered on
+'Private Sub ClearButtonInactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+''PURPOSE: Make Clear Button appear Blue when hovered on
+'    CancelButtonInactive.Visible = True
+'    OKButtonInactive.Visible = True
+'End Sub
+Private Sub ClearButtonL1_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
     CancelButtonInactive.Visible = True
     OKButtonInactive.Visible = True
-    ClearButtonInactive.Visible = False
+    ClearButtonL1_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonL2_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonL2_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonL3_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonL3_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonL4_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonL4_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonL5_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonL5_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonP1_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonP1_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonP2_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonP2_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonP3_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonP3_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonP4_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonP4_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonP5_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonP5_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonAccessories_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonAccessories_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonAFIC_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonAFIC_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonInt_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonInt_Inactive.Visible = False
+End Sub
+Private Sub ClearButtonSling_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonSling_Inactive.Visible = False
 End Sub
 Private Sub Userform_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
 'PURPOSE: Reset Userform buttons to Inactive Status
     CancelButtonInactive.Visible = True
     OKButtonInactive.Visible = True
-    ClearButtonInactive.Visible = True
+
+    'Other Clear buttons
+    ClearButtonL1_Inactive.Visible = True
+    ClearButtonL2_Inactive.Visible = True
+    ClearButtonL3_Inactive.Visible = True
+    ClearButtonL4_Inactive.Visible = True
+    ClearButtonL5_Inactive.Visible = True
+    ClearButtonP1_Inactive.Visible = True
+    ClearButtonP2_Inactive.Visible = True
+    ClearButtonP3_Inactive.Visible = True
+    ClearButtonP4_Inactive.Visible = True
+    ClearButtonP5_Inactive.Visible = True
+    ClearButtonAccessories_Inactive.Visible = True
+    ClearButtonAFIC_Inactive.Visible = True
+    ClearButtonInt_Inactive.Visible = True
+    ClearButtonSling_Inactive.Visible = True
 End Sub
