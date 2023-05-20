@@ -50,8 +50,9 @@ Dim LightTripleArm()      As String
 Dim LightQuadArm()        As String
 Dim LightMobile()         As String
 Dim LightSplit(1 To 1)          As String
-Dim LightMira(1 To 2)          As String
-Dim LightVega(1 To 2)          As String
+Dim LightMira()          As String
+Dim LightVega()          As String
+Dim LightMSL()          As String
 
 'Count light cells that contain "0" in description to determine number of light heads
 Dim iLHead                As Integer
@@ -176,6 +177,24 @@ Dim lastMobileRow         As Long
 Dim FindFirstMobileRow    As Range
 Dim FindLastMobileRow    As Range
 
+'First and last row for Mira 70/110 in StandardList worksheet
+Dim firstMiraRow         As Long
+Dim lastMiraRow         As Long
+Dim FindFirstMiraRow    As Range
+Dim FindLastMiraRow    As Range
+
+'First and last row for Vega 80 in StandardList worksheet
+Dim firstVegaRow         As Long
+Dim lastVegaRow         As Long
+Dim FindFirstVegaRow    As Range
+Dim FindLastVegaRow    As Range
+
+'First and last row for MSL in StandardList worksheet
+Dim firstMSLRow         As Long
+Dim lastMSLRow         As Long
+Dim FindFirstMSLRow    As Range
+Dim FindLastMSLRow    As Range
+
 'First and last row for Configurator section in Proposal worksheet
 Dim firstRow        As Long
 Dim lastRow         As Long
@@ -272,6 +291,8 @@ Dim firstConfigDIOtherAccRow           As Long
 Dim lastConfigDIOtherAccRow            As Long
 Dim firstConfigDICableRow           As Long
 Dim lastConfigDICableRow            As Long
+Dim firstConfigDIOnceOffRow           As Long
+Dim lastConfigDIOnceOffRow            As Long
 Dim FindFirstConfigDISMRow         As Range
 Dim FindLastConfigDISMRow          As Range
 Dim FindFirstConfigDIWDRow         As Range
@@ -288,6 +309,8 @@ Dim FindFirstConfigDIOtherAccRow        As Range
 Dim FindLastConfigDIOtherAccRow         As Range
 Dim FindFirstConfigDICableRow       As Range
 Dim FindLastConfigDICableRow        As Range
+Dim FindFirstConfigDIOnceOffRow       As Range
+Dim FindLastConfigDIOnceOffRow        As Range
 
 'First and last row for Slings in Configurator worksheet
 Dim firstConfigSlingRow         As Long
@@ -425,7 +448,13 @@ Dim installIF1   As String
 '
 Private Sub CancelButton_Click()
 Call OKButton_Click
-Protect
+
+'If in BDM or Mgmt mode, protect the "Proposal" worksheet
+If Range("ViewMode").Value = "BDM" Or Range("ViewMode").Value = "Management" Then
+    Protect
+Else
+    Unprotect
+End If
 
 'Show Configurator userform (Room 1) and rename the caption for Room 2 tab
 ConfiguratorUserForm.MultiPage6.Pages("Room2").Caption = Controls("Room2Name").Value
@@ -856,7 +885,7 @@ Private Sub OKButton_Click()
     Call OptimizeCode_Begin
     
     'Show all line items
-    DisplayAll
+    Call DisplayAll
     
     'Show the progress bar
     ProgressBar.Show
@@ -1224,7 +1253,7 @@ Private Sub OKButton_Click()
     End If
     
     'Summarise the line items in Proposal worksheet
-    DisplaySubtotal
+    Call DisplaySubtotal
     
     'Summarise the line items in Tables worksheet
     Sheets("Tables").Activate
@@ -1248,6 +1277,9 @@ End Sub
 
 'Room heading for Save button
 Private Sub RoomTab()
+
+Unprotect
+
     'Warn user to put in a name if not entered
     If Controls("Room2Name").Value = "" Then
 flagStartRoomName:
@@ -1413,10 +1445,10 @@ End Sub
 'Light Section for Save button
 Private Sub LightTab()
 
+Unprotect
+
 'Go through each configured light tab
 For X = LBound(P, 2) To LightNo
-
-Unprotect
 
     'Warn user to put in a name if not entered
     If Controls("Light" & P(1, X) & "Name").Value = "" Then
@@ -1448,7 +1480,6 @@ flagStartLightNo:
     End If
     
     'Zero out empty textboxes
-    If Controls("L" & P(1, X) & "iCEItem").Value = "" Then Controls("L" & P(1, X) & "iCEItem").Value = 0
     If Controls("L" & P(1, X) & "CamAdder").Value = "" Then Controls("L" & P(1, X) & "CamAdder").Value = 0
     If Controls("L" & P(1, X) & "4KCam").Value = "" Then Controls("L" & P(1, X) & "4KCam").Value = 0
     
@@ -1475,11 +1506,11 @@ flagStartLightNo:
         If Controls("L" & P(1, X) & "iCE").Value = True Then
             .Range("L" & P(1, X) & "Rm2Type") = "iCE 30m"
         ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
-            .Range("L" & P(1, X) & "Rm2Type") = "Mira 70"
+            .Range("L" & P(1, X) & "Rm2Type") = "Mira 70/110"
         ElseIf Controls("L" & P(1, X) & "Vega").Value = True Then
             .Range("L" & P(1, X) & "Rm2Type") = "Vega 80"
         ElseIf Controls("L" & P(1, X) & "Gamma").Value = True Then
-            .Range("L" & P(1, X) & "Rm2Type") = "MSL119C"
+            .Range("L" & P(1, X) & "Rm2Type") = "MSL119/319"
         End If
         
         'Options for iCE 30m Light
@@ -1515,27 +1546,34 @@ flagStartLightNo:
         End If
         
         'Comboboxes/Textboxes
-        If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm2iCE") = Controls("L" & P(1, X) & "iCEItem").Value
-        If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm2CamAdder") = Controls("L" & P(1, X) & "CamAdder").Value
-        If Controls("L" & P(1, X) & "iCE").Value = True Then .Range("L" & P(1, X) & "Rm24KCam") = Controls("L" & P(1, X) & "4KCam").Value
+        If Controls("L" & P(1, X) & "iCE").Value = True Then
+            .Range("L" & P(1, X) & "Rm2iCE") = Controls("L" & P(1, X) & "iCEItem").Value
+            .Range("L" & P(1, X) & "Rm2CamAdder") = Controls("L" & P(1, X) & "CamAdder").Value
+            .Range("L" & P(1, X) & "Rm24KCam") = Controls("L" & P(1, X) & "4KCam").Value
+        End If
         If Controls("L" & P(1, X) & "Mira").Value = True Then .Range("L" & P(1, X) & "Rm2Mira") = Controls("L" & P(1, X) & "MiraLight").Value
         If Controls("L" & P(1, X) & "Vega").Value = True Then .Range("L" & P(1, X) & "Rm2Vega") = Controls("L" & P(1, X) & "VegaItem").Value
-        If Controls("L" & P(1, X) & "Gamma").Value = True Then .Range("L" & P(1, X) & "Rm2Gamma") = Controls("L" & P(1, X) & "GammaItem").Value
+        If Controls("L" & P(1, X) & "Gamma").Value = True Then .Range("L" & P(1, X) & "Rm2Gamma") = Controls("L" & P(1, X) & "MSLItem").Value
         
         'Re-set the accessories (Room Configuration)
         Set FindFirstLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
-        Set FindLastLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
     
         'First and last row for Light Accessories
         firstLiCEAccRow = FindFirstLiCEAccRow.Row + 1
         lastLiCEAccRow = FindLastLiCEAccRow.Row - 2
         
-        Set FindFirstLMiraAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindFirstLMiraAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
         Set FindLastLMiraAccRow = .Range(Rm2Range).Find(What:="Pendants", LookIn:=xlValues)
         
         'First and last row for Light Accessories
-        firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
         lastLMiraAccRow = FindLastLMiraAccRow.Row - 2
+        
+        If Controls("L" & P(1, X) & "Vega").Value = True Then
+            firstLMiraAccRow = FindFirstLMiraAccRow.Row + 2
+        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
+            firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
+        End If
         
         'Accessories
         If Controls("L" & P(1, X) & "iCE").Value = True Then
@@ -1544,7 +1582,7 @@ flagStartLightNo:
                 .Range(P(2, X) & I).Value = ""
             Next I
         ElseIf Controls("L" & P(1, X) & "Mira").Value = True Or Controls("L" & P(1, X) & "Vega").Value = True Then
-            'Clear acc for Mira 70 / Vega 80 if previously configured
+            'Clear acc for Mira 70 / 110 - Vega 80 if previously configured
             For I = firstLMiraAccRow To lastLMiraAccRow
                 .Range(P(2, X) & I).Value = ""
             Next I
@@ -1628,23 +1666,8 @@ flagStartLightNo:
                     Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "CamAdder").Value)
                 End If
             
-            '4K Camera - 3 line items
-            'Out: IP Video
-            ElseIf Range("A" & I).Value = "SL-CAM-4K-ADD" Then
-                If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
-                    Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
-                    Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
-                End If
-                    
-            'Wireless
-            ElseIf Range("A" & I).Value = "SL-CAM-4K-WIRELESS-ADD" Then
-                If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
-                    Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
-                    Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
-                End If
-                    
-            'In: Ethernet & Out: HDMI
-            ElseIf Range("A" & I).Value = "SL-CAM-4K-DEC" Then
+            '4K Camera Ready Adder
+            ElseIf Range("A" & I).Value = "SRG-LED-4KCAM-RDY-ADD" Then
                 If Controls("L" & P(1, X) & "4KCam").Value <> "" And CInt(Controls("L" & P(1, X) & "4KCam").Value) > 0 Then
                     Range("E" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value) * lightQTY
                     Range("C" & I).Value = CInt(Controls("L" & P(1, X) & "4KCam").Value)
@@ -1713,14 +1736,14 @@ flagStartLightNo:
                 installL1 = "=F" & I
             End If
             
-        'Mira 70 light
+        'Mira 70/110 light
         ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
             If Range("B" & I).Value = Controls("L" & P(1, X) & "MiraLight").Value Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
             
-            'Mira 70 Light installation
-            ElseIf Range("A" & I).Value = "Install-Mira 70" Then
+            'Mira 70/110 Light installation
+            ElseIf Range("A" & I).Value = "Install-Mira 70/110" Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
                 installL1 = "=F" & I
@@ -1731,20 +1754,20 @@ flagStartLightNo:
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
                 
-            'Vega 80 light installation (same as Mira 70)
+            'Vega 80 light installation (same as Mira 70/110)
             ElseIf Range("A" & I).Value = "Install-Vega 80" Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
                 installL1 = "=F" & I
             End If
-        'MSL119C Light
+        'MSL119/319 Light
         ElseIf Controls("L" & P(1, X) & "Gamma").Value = True Then
-            If Range("B" & I).Value = Controls("L" & P(1, X) & "GammaItem").Value Then
+            If Range("B" & I).Value = Controls("L" & P(1, X) & "MSLItem").Value Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
             
             'MSL119C Light installation
-            ElseIf Range("A" & I).Value = "Install-MSL119C" Then
+            ElseIf Range("A" & I).Value = "Install-MSL119/319" Then
                 Range("E" & I).Value = lightQTY
                 Range("C" & I).Value = 1
                 installL1 = "=F" & I
@@ -1783,13 +1806,13 @@ flagStartLightNo:
     Sheets("Variable").Activate
     If Controls("L" & P(1, X) & "Gamma").Value = True Then
     
-        'MSL119C
+        'MSL119/319
         opmExamLightFormula = opmExamLightFormula & "+Proposal!G" & I
         Range("Config_Rm2OPM_ExamLights").Formula = opmExamLightFormula
 
     ElseIf Controls("L" & P(1, X) & "Mira").Value = True Or Controls("L" & P(1, X) & "Vega").Value = True Then
     
-        'Mira 70 and Vega 80
+        'Mira 70/110 and Vega 80
         opmExamLightFormula = opmExamLightFormula & "+Proposal!G" & I
         Range("Config_Rm2OPM_ExamLights").Formula = opmExamLightFormula
         
@@ -1868,10 +1891,10 @@ End Sub
 'Pendant Section for Save button
 Private Sub PendantTab()
 
+Unprotect
+
 'Go through each configured pendant tab
 For X = LBound(P, 2) To PendantNo
-
-Unprotect
 
     'Warn user to put in a name if not entered
     If Controls("Pendant" & P(1, X) & "Name").Value = "" Then
@@ -2294,8 +2317,8 @@ flagStartPendantNo:
                     End If
                 Next k
                 
-            'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle/Pendant Mount, Single, Extended Arm" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega LED 80, Knuckle/Pendant Mount, Single, Extended Arm" Then
+            'If knuckle mount light is chosen (Mira 70/110 or Vega 80), auto include the mount adaptor and cable
+            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 150 mm Drop Tube" Then
             
                 For k = pendantRow + 1 To lastRow
                     'Mount adaptor
@@ -2507,6 +2530,10 @@ For I = pendantRow + 1 To lastRow
         Range("C" & I).Value = 1
     'Arm Configuration
     ElseIf Range("B" & I).Value = Controls("P" & P(1, X) & "Con1ArmConfig").Value Then
+        Range("E" & I).Value = pendantQTY
+        Range("C" & I).Value = 1
+    'Auto include for all tandem arm configs
+    ElseIf Range("B" & I).Value = "Custom Long Ceiling Bearing Spacer 9inches" Then
         Range("E" & I).Value = pendantQTY
         Range("C" & I).Value = 1
     'Installation
@@ -2734,8 +2761,8 @@ For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
             End If
         Next k
             
-    'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
-    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle/Pendant Mount, Single, Extended Arm" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega LED 80, Knuckle/Pendant Mount, Single, Extended Arm" Then
+    'If knuckle mount light is chosen (Mira 70/110 or Vega 80), auto include the mount adaptor and cable
+    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 150 mm Drop Tube" Then
         
         For k = pendantRow + 1 To lastRow
             'Mount adaptor
@@ -2928,6 +2955,9 @@ End Sub
 
 'AF+IC for Save button
 Private Sub AFICTab()
+
+Unprotect
+
     'Zero out textboxes if empty
     For j = 0 To qtyAFIC
         If Controls("AF_IC_Qty" & j).Value = "" Then
@@ -3307,6 +3337,9 @@ Unprotect
         For I = firstConfigDICableRow To lastConfigDICableRow
             .Range("D" & I).Value = ""
         Next I
+        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
+            .Range("D" & I).Value = ""
+        Next I
         
         'Specify the QTY for each DI in selected listbox
         For I = firstConfigDISMRow To lastConfigDISMRow
@@ -3359,6 +3392,13 @@ Unprotect
             Next j
         Next I
         For I = firstConfigDICableRow To lastConfigDICableRow
+            For j = 0 To Controls("DI_Sel").ListCount - 1
+                If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
+                    .Range("D" & I).Value = CInt(Controls("DI_Qty" & j).Value)
+                End If
+            Next j
+        Next I
+        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
             For j = 0 To Controls("DI_Sel").ListCount - 1
                 If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
                     .Range("D" & I).Value = CInt(Controls("DI_Qty" & j).Value)
@@ -3544,6 +3584,7 @@ End Sub
 'Sling for Save button
 '
 Private Sub SlingTab()
+
 Unprotect
 
     'Zero out Sling textboxes if empty
@@ -3846,7 +3887,7 @@ End Sub
 Private Sub FindiCE30mLightAccessories(productInt As Integer)
     With Sheets("Configurator")
         Set FindFirstLiCEAccRow = .Range("B:B").Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
-        Set FindLastLiCEAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
     End With
 
     'First and last row for Light Accessories
@@ -3860,13 +3901,19 @@ Private Sub FindiCE30mLightAccessories(productInt As Integer)
 End Sub
 Private Sub FindMiraLightAccessories(productInt As Integer)
     With Sheets("Configurator")
-        Set FindFirstLMiraAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindFirstLMiraAccRow = .Range("B:B").Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
         Set FindLastLMiraAccRow = .Range("B:B").Find(What:="Pendants", LookIn:=xlValues)
     End With
 
     'First and last row for Light Accessories
-    firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
     lastLMiraAccRow = FindLastLMiraAccRow.Row - 2
+    
+    If Controls("L" & productInt & "Vega").Value = True Then
+        firstLMiraAccRow = FindFirstLMiraAccRow.Row + 2
+    'Mira LED Wall Control Assembly only for Mira Lights
+    ElseIf Controls("L" & productInt & "Mira").Value = True Then
+        firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
+    End If
 
     'Add the specified accessories into the acc listbox
     For Each Cell In Worksheets("Configurator").Range("B" & firstLMiraAccRow & ":" & "B" & lastLMiraAccRow)
@@ -3874,7 +3921,7 @@ Private Sub FindMiraLightAccessories(productInt As Integer)
     Next Cell
 End Sub
 '
-'Light iCE 30m/Mira 70/Gamma 50 options
+'Light iCE 30m/Mira 70/110/Gamma 50 options
 '
 'Light 1
 'Options to show/hide frames based on selected option
@@ -4192,11 +4239,11 @@ Private Sub ICUPendantOptions(productInt As Integer)
     Controls("P" & productInt & "Con1ArmDouble") = True
     Controls("P" & productInt & "Con1ArmFixed") = True
     Controls("P" & productInt & "Con1ArmMotorised") = False
-    Controls("P" & productInt & "Con1ArmConfig") = "F1000-F800, F800-F800"
+    Controls("P" & productInt & "Con1ArmConfig") = "F1000-F800, F1000-F800"
     Controls("P" & productInt & "Con1Vertical") = True
-    Controls("P" & productInt & "Con1Console") = "L 1295 x W 320 x D 356mm"
+    Controls("P" & productInt & "Con1Console") = "L 1295 x W 320 x D 229mm"
     Controls("P" & productInt & "Con2Vertical") = True
-    Controls("P" & productInt & "Con2Console") = "L 1295 x W 320 x D 356mm"
+    Controls("P" & productInt & "Con2Console") = "L 1295 x W 320 x D 229mm"
 
     'Console 1
     Controls("Suction_P" & productInt & "Con1") = "3"
@@ -4926,6 +4973,11 @@ Private Sub L1VegaItem_DropButtonClick()
     L1VegaItem.List = LightVega
 End Sub
 
+'MSL 119/319
+Private Sub L1MSLItem_DropButtonClick()
+    L1MSLItem.List = LightMSL
+End Sub
+
 'Light 2
 'iCE 30m
 Private Sub L2iCEItem_DropButtonClick()
@@ -4940,6 +4992,11 @@ End Sub
 'Vega 80
 Private Sub L2VegaItem_DropButtonClick()
     L2VegaItem.List = LightVega
+End Sub
+
+'MSL 119/319
+Private Sub L2MSLItem_DropButtonClick()
+    L2MSLItem.List = LightMSL
 End Sub
 
 'Light 3
@@ -4958,6 +5015,11 @@ Private Sub L3VegaItem_DropButtonClick()
     L3VegaItem.List = LightVega
 End Sub
 
+'MSL 119/319
+Private Sub L3MSLItem_DropButtonClick()
+    L3MSLItem.List = LightMSL
+End Sub
+
 'Light 4
 'iCE 30m
 Private Sub L4iCEItem_DropButtonClick()
@@ -4974,6 +5036,11 @@ Private Sub L4VegaItem_DropButtonClick()
     L4VegaItem.List = LightVega
 End Sub
 
+'MSL 119/319
+Private Sub L4MSLItem_DropButtonClick()
+    L4MSLItem.List = LightMSL
+End Sub
+
 'Light 5
 'iCE 30m
 Private Sub L5iCEItem_DropButtonClick()
@@ -4988,6 +5055,11 @@ End Sub
 'Vega 80
 Private Sub L5VegaItem_DropButtonClick()
     L5VegaItem.List = LightVega
+End Sub
+
+'MSL 119/319
+Private Sub L5MSLItem_DropButtonClick()
+    L5MSLItem.List = LightMSL
 End Sub
 '
 'ComboBox for Arm Config, Pendant
@@ -5558,6 +5630,18 @@ Private Sub FibreCabling_Add_Click()
     Next I
 End Sub
 
+'Listbox 9
+Private Sub OnceOff_DI_Add_Click()
+    For I = 0 To OnceOff_DI.ListCount - 1
+        If OnceOff_DI.Selected(I) = True Then DI_Sel.AddItem OnceOff_DI.List(I)
+    Next I
+        
+    'Deselect after add
+    For I = 0 To OnceOff_DI.ListCount - 1
+        OnceOff_DI.Selected(I) = False
+    Next I
+End Sub
+
 Private Sub DI_Remove_Click()
 
     counter = 0
@@ -5676,8 +5760,13 @@ Call SlingCategory
 
 Call OptimizeCode_End
 
-'Protect the workbook to prevent in-cell warnings and free-form editing after running and "closing" the Configurator
-Protect
+    'If in BDM or Mgmt mode, protect the "Proposal" worksheet
+    'Protect the workbook to prevent in-cell warnings and free-form editing after running and "closing" the Configurator
+    If Range("ViewMode").Value = "BDM" Or Range("ViewMode").Value = "Management" Then
+        Protect
+    Else
+        Unprotect
+    End If
 
     'Set Focus
     'PendantNo.SetFocus
@@ -5716,6 +5805,7 @@ Private Sub LightCategory()
         Controls("L" & P(1, X) & "4KCam").Value = .Range("L" & P(1, X) & "Rm24KCam")
         Controls("L" & P(1, X) & "MiraLight").Value = .Range("L" & P(1, X) & "Rm2Mira")
         Controls("L" & P(1, X) & "VegaItem").Value = .Range("L" & P(1, X) & "Rm2Vega")
+        Controls("L" & P(1, X) & "MSLItem").Value = .Range("L" & P(1, X) & "Rm2Gamma")
         
     'Initialize Options
         If .Range("L" & P(1, X) & "Rm2Type") = "iCE 30m" Then
@@ -5723,7 +5813,7 @@ Private Sub LightCategory()
             Controls("L" & P(1, X) & "Gamma").Value = False
             Controls("L" & P(1, X) & "Mira").Value = False
             Controls("L" & P(1, X) & "Vega").Value = False
-        ElseIf .Range("L" & P(1, X) & "Rm2Type") = "Mira 70" Then
+        ElseIf .Range("L" & P(1, X) & "Rm2Type") = "Mira 70/110" Then
             Controls("L" & P(1, X) & "iCE").Value = False
             Controls("L" & P(1, X) & "Gamma").Value = False
             Controls("L" & P(1, X) & "Mira").Value = True
@@ -5733,7 +5823,7 @@ Private Sub LightCategory()
             Controls("L" & P(1, X) & "Gamma").Value = False
             Controls("L" & P(1, X) & "Mira").Value = False
             Controls("L" & P(1, X) & "Vega").Value = True
-        ElseIf .Range("L" & P(1, X) & "Rm2Type") = "MSL119C" Then
+        ElseIf .Range("L" & P(1, X) & "Rm2Type") = "MSL119/319" Then
             Controls("L" & P(1, X) & "iCE").Value = False
             Controls("L" & P(1, X) & "Gamma").Value = True
             Controls("L" & P(1, X) & "Mira").Value = False
@@ -5793,7 +5883,19 @@ Private Sub LightCategory()
         
         'Mobile Light
         Set FindFirstMobileRow = .Range("B:B").Find(What:="6) Mobile Light", LookIn:=xlValues)
-        Set FindLastMobileRow = .Range("B:B").Find(What:="7) Gamma Exam Light", LookIn:=xlValues)
+        Set FindLastMobileRow = .Range("B:B").Find(What:="MSL", LookIn:=xlValues)
+    
+        'MSL
+        Set FindFirstMSLRow = .Range("B:B").Find(What:="MSL", LookIn:=xlValues)
+        Set FindLastMSLRow = .Range("B:B").Find(What:="VEGA 80", LookIn:=xlValues)
+            
+        'Mira 70/110
+        Set FindFirstMiraRow = .Range("B:B").Find(What:="MIRA 70/110", LookIn:=xlValues)
+        Set FindLastMiraRow = .Range("B:B").Find(What:="Parts", LookIn:=xlValues)
+            
+        'Vega 80
+        Set FindFirstVegaRow = .Range("B:B").Find(What:="VEGA 80", LookIn:=xlValues)
+        Set FindLastVegaRow = .Range("B:B").Find(What:="MIRA 70/110", LookIn:=xlValues)
     
         'First and last row
         firstSingleArmRow = FindFirstSingleArmRow.Row + 1
@@ -5806,6 +5908,12 @@ Private Sub LightCategory()
         lastQuadArmRow = FindLastQuadArmRow.Row - 1
         firstMobileRow = FindFirstMobileRow.Row + 1
         lastMobileRow = FindLastMobileRow.Row - 1
+        firstMSLRow = FindFirstMSLRow.Row + 1
+        lastMSLRow = FindLastMSLRow.Row - 1
+        firstMiraRow = FindFirstMiraRow.Row + 1
+        lastMiraRow = FindLastMiraRow.Row - 1
+        firstVegaRow = FindFirstVegaRow.Row + 1
+        lastVegaRow = FindLastVegaRow.Row - 1
         
         'Dimension of SingleArm array
         size = lastSingleArmRow - firstSingleArmRow + 1
@@ -5827,13 +5935,17 @@ Private Sub LightCategory()
         size = lastMobileRow - firstMobileRow + 1
         ReDim LightMobile(size)
         
-        'Mira 70 lights
-        LightMira(1) = "Mira LED 70, Ceiling Mount, Single, Extended Arm"
-        LightMira(2) = "Mira 70, Floor Stand, Extended Arm"
-        
+        'Mira 70/110 lights
+        size = lastMiraRow - firstMiraRow + 1
+        ReDim LightMira(size)
+            
         'Vega 80 lights
-        LightVega(1) = "Vega 80, Ceiling Mount, Single, Extended Arm"
-        LightVega(2) = "Vega 80, Floor Stand, Extended Arm"
+        size = lastVegaRow - firstVegaRow + 1
+        ReDim LightVega(size)
+            
+        'MSL lights
+        size = lastMSLRow - firstMSLRow + 1
+        ReDim LightMSL(size)
         
         'Generic descriptions for Lights (iCE30m)
         With Sheets("Variable")
@@ -5902,21 +6014,50 @@ Private Sub LightCategory()
             LightMobile(counter) = .Range("D" & I).Value
             counter = counter + 1
         Next I
+        
+        'Mira70/110 Light
+        counter = 1
+        For I = firstMiraRow To lastMiraRow
+            'Get Mira 70/110 line items
+            LightMira(counter) = .Range("D" & I).Value
+            counter = counter + 1
+        Next I
+            
+        'Vega 80 Light
+        counter = 1
+        For I = firstVegaRow To lastVegaRow
+            'Get Vega 80 line items
+            LightVega(counter) = .Range("D" & I).Value
+            counter = counter + 1
+        Next I
+            
+        'MSL Light
+        counter = 1
+        For I = firstMSLRow To lastMSLRow
+            'Get MSL119/319 line items
+            LightMSL(counter) = .Range("D" & I).Value
+            counter = counter + 1
+        Next I
     End With
 
         Set FindFirstLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - iCE 30m", LookIn:=xlValues)
-        Set FindLastLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindLastLiCEAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
     
         'First and last row for Light Accessories
         firstLiCEAccRow = FindFirstLiCEAccRow.Row + 1
         lastLiCEAccRow = FindLastLiCEAccRow.Row - 2
         
-        Set FindFirstLMiraAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / Vega 80", LookIn:=xlValues)
+        Set FindFirstLMiraAccRow = .Range(Rm2Range).Find(What:="Accessories - Mira 70 / 110 - Vega 80", LookIn:=xlValues)
         Set FindLastLMiraAccRow = .Range(Rm2Range).Find(What:="Pendants", LookIn:=xlValues)
         
         'First and last row for Light Accessories
-        firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
         lastLMiraAccRow = FindLastLMiraAccRow.Row - 2
+
+        If Controls("L" & P(1, X) & "Vega").Value = True Then
+            firstLMiraAccRow = FindFirstLMiraAccRow.Row + 2
+        ElseIf Controls("L" & P(1, X) & "Mira").Value = True Then
+            firstLMiraAccRow = FindFirstLMiraAccRow.Row + 1
+        End If
 
         If Controls("L" & P(1, X) & "iCE").Value = True Then
 
@@ -5973,7 +6114,6 @@ Private Sub PendantCategory()
     With Sheets("Configurator")
     
     'Initialize TextBoxes
-        Controls("Pendant" & P(1, X) & "Name").Value = .Range("P" & P(1, X) & "Rm2Name")
         Controls("Pendant" & P(1, X) & "No").Value = .Range("P" & P(1, X) & "Rm2Qty")
         Controls("Pendant" & P(1, X) & "Description").Value = .Range("P" & P(1, X) & "Rm2Desc")
         
@@ -5993,6 +6133,8 @@ Private Sub PendantCategory()
         ElseIf .Range("P" & P(1, X) & "Rm2Type") = "Std PLP" Then
             Controls("Pendant" & P(1, X) & "PLP").Value = True
         End If
+        
+        Controls("Pendant" & P(1, X) & "Name").Value = .Range("P" & P(1, X) & "Rm2Name")
         
         'Console 1
         If .Range("P" & P(1, X) & "Rm2Con1ArmSingle") = False And .Range("P" & P(1, X) & "Rm2Con1ArmDual") = True Then
@@ -6495,6 +6637,9 @@ With Sheets("Configurator")
     Set FindFirstConfigDICableRow = .Range("B:B").Find(What:="Fibre Trunk Cabling", LookIn:=xlValues)
     Set FindLastConfigDICableRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
     
+    Set FindFirstConfigDIOnceOffRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
+    Set FindLastConfigDIOnceOffRow = .Range("B:B").Find(What:="End_DI", LookIn:=xlValues)
+    
     'First and last row for Surgical Monitor
     firstConfigDISMRow = FindFirstConfigDISMRow.Row + 1
     lastConfigDISMRow = FindLastConfigDISMRow.Row - 1
@@ -6526,6 +6671,10 @@ With Sheets("Configurator")
     'First and last row for Fibre Trunk Cabling
     firstConfigDICableRow = FindFirstConfigDICableRow.Row + 1
     lastConfigDICableRow = FindLastConfigDICableRow.Row - 1
+    
+    'First and last row for Once Off per Facility
+    firstConfigDIOnceOffRow = FindFirstConfigDIOnceOffRow.Row + 1
+    lastConfigDIOnceOffRow = FindLastConfigDIOnceOffRow.Row - 2
 
     'Add the relevant rows into the listboxes
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDISMRow & ":" & "B" & lastConfigDISMRow)
@@ -6558,6 +6707,10 @@ With Sheets("Configurator")
     
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDICableRow & ":" & "B" & lastConfigDICableRow)
         FibreCabling.AddItem Cell.Value
+    Next Cell
+    
+    For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDIOnceOffRow & ":" & "B" & lastConfigDIOnceOffRow)
+        OnceOff_DI.AddItem Cell.Value
     Next Cell
     
     counter = 0
@@ -6626,6 +6779,15 @@ With Sheets("Configurator")
     
     For I = firstConfigDICableRow To lastConfigDICableRow
         'Add non-zero quantity Fibre Trunk Cabling items into the Selected listbox, and its quantity into the relevant textbox
+        If .Range("D" & I).Value > 0 And .Range("D" & I).Value <> "" Then
+            Controls("DI_Sel").AddItem .Range("B" & I).Value
+            Controls("DI_Qty" & counter).Value = .Range("D" & I).Value
+            counter = counter + 1
+        End If
+    Next I
+    
+    For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
+        'Add non-zero quantity Once Off per facility items into the Selected listbox, and its quantity into the relevant textbox
         If .Range("D" & I).Value > 0 And .Range("D" & I).Value <> "" Then
             Controls("DI_Sel").AddItem .Range("B" & I).Value
             Controls("DI_Qty" & counter).Value = .Range("D" & I).Value
