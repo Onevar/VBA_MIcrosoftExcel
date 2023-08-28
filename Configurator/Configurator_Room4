@@ -291,8 +291,6 @@ Dim firstConfigDIOtherAccRow           As Long
 Dim lastConfigDIOtherAccRow            As Long
 Dim firstConfigDICableRow           As Long
 Dim lastConfigDICableRow            As Long
-Dim firstConfigDIOnceOffRow           As Long
-Dim lastConfigDIOnceOffRow            As Long
 Dim FindFirstConfigDISMRow         As Range
 Dim FindLastConfigDISMRow          As Range
 Dim FindFirstConfigDIWDRow         As Range
@@ -309,8 +307,6 @@ Dim FindFirstConfigDIOtherAccRow        As Range
 Dim FindLastConfigDIOtherAccRow         As Range
 Dim FindFirstConfigDICableRow       As Range
 Dim FindLastConfigDICableRow        As Range
-Dim FindFirstConfigDIOnceOffRow       As Range
-Dim FindLastConfigDIOnceOffRow        As Range
 
 'First and last row for Slings in Configurator worksheet
 Dim firstConfigSlingRow         As Long
@@ -457,6 +453,12 @@ End If
 
 'Show Configurator userform (Room 4) and rename the caption for Room 4 tab
 ConfiguratorUserForm.MultiPage6.Pages("Room4").Caption = Controls("Room4Name").Value
+
+'Reflect the Room No onto the main config page (for the next time Configurator is opened)
+If Sheets("Configurator").Range("RoomQty") < 4 Then
+    Sheets("Configurator").Range("RoomQty") = 4
+End If
+
 ConfiguratorUserForm.MultiPage6.Value = 0
 Unload Configurator_Room4
 
@@ -573,7 +575,14 @@ Private Sub ClearButtonSling_Click()
     Call SlingClear
     Call SlingCategory
 End Sub
-    '
+'
+'Re-Initialize the Configurator for the current page (PNote)
+'
+Private Sub ClearButtonPNote_Click()
+    Call PNoteClear
+    Call PNoteCategory
+End Sub
+'
 'Re-Initialize the entire Configurator
 '
 Private Sub ClearButton_Click()
@@ -588,6 +597,7 @@ Private Sub ClearButton_Click()
     Call AFICClear
     Call IntegrationClear
     Call SlingClear
+    Call PNoteClear
     
     'Re-initialize UserForm
     Call UserForm_Initialize
@@ -873,6 +883,22 @@ Private Sub SlingClear()
     'Clear listboxes
     Controls("SlingSel").Clear
     Controls("Sling").Clear
+End Sub
+
+Private Sub PNoteClear()
+'PNote SECTION
+
+    With Sheets("Configurator")
+    
+        'Clear option
+        .Range("PNoteOptionRm4") = False
+        
+        'Clear textbox
+        .Range("PNoteRm4").Value = ""
+    End With
+
+    'Clear textbox content
+    Controls("PNoteContent").Value = ""
 End Sub
 '
 'Save button - Saves and export the Configurator
@@ -1188,6 +1214,14 @@ Private Sub OKButton_Click()
             .Range("SlingOptionRm4") = False
         End If
     End With
+    
+    With Sheets("Configurator")
+        If Controls("PNoteYes").Value = True Then
+            .Range("PNoteOptionRm4") = True
+        ElseIf Controls("PNoteNo").Value = True Then
+            .Range("PNoteOptionRm4") = False
+        End If
+    End With
 
     'Update progress bar label and indicator
     ProgressBar.ProgressBar1.Value = 28
@@ -1213,6 +1247,11 @@ Private Sub OKButton_Click()
                 
     Range("E" & slingHeadingRow).Value = "0"
         
+    'PNote Section
+    If Controls("PNoteYes").Value = True Then
+        Call PNoteTab
+    End If
+    
     'Sling Section
     If Controls("SlingYes").Value = True Then
         Call SlingTab
@@ -1384,10 +1423,10 @@ flagStartRoomNo:
     Range("E" & room4ConfigRow).Value = CInt(Controls("Room4No").Value)
     Range("G" & room4ConfigRow).Formula = "=" & Right(roomLightDisSubtotal, Len(roomLightDisSubtotal) - 1) & "+" & Right(roomExamLightDisSubtotal, Len(roomExamLightDisSubtotal) - 1) & "+" & Right(roomPendantDisSubtotal, Len(roomPendantDisSubtotal) - 1) & "+" & Right(roomPendantMDisSubtotal, Len(roomPendantMDisSubtotal) - 1) & "+" & Right(roomInfDisSubtotal, Len(roomInfDisSubtotal) - 1) & "+" & Right(roomAmicoDisSubtotal, Len(roomAmicoDisSubtotal) - 1) & "+" & Right(roomIntDisSubtotal, Len(roomIntDisSubtotal) - 1) & "+" & Right(roomSlingDisSubtotal, Len(roomSlingDisSubtotal) - 1)
     Range("F" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "F")
+    Range("I" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "I")
     Range("J" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "J")
     Range("K" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "K")
     Range("L" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "L")
-    Range("M" & room4ConfigRow).Formula = Replace(Range("G" & room4ConfigRow).Formula, "G", "M")
     
     With Sheets("Tables")
         'First and last row for Configurator to be included in Tables worksheet
@@ -1430,11 +1469,11 @@ flagStartRoomNo:
     Range("H" & j).Interior.ColorIndex = 34
     Range("K" & j).Formula = "=IFERROR(SUM(Tables!K" & j + 1 & ":" & "K" & k & "),0)"
     Range("K" & j).Interior.ColorIndex = 34
-    Range("L" & j).Formula = "=IFERROR(SUM(Tables!L" & j + 1 & ":" & "L" & k & "),0)"
+    Range("L" & j).Formula = Replace(Range("K" & j).Formula, "K", "L")
     Range("L" & j).Interior.ColorIndex = 34
-    Range("M" & j).Formula = "=IFERROR(SUM(Tables!M" & j + 1 & ":" & "M" & k & "),0)"
+    Range("M" & j).Formula = Replace(Range("K" & j).Formula, "K", "M")
     Range("M" & j).Interior.ColorIndex = 34
-    Range("N" & j).Formula = "=IFERROR(SUM(Tables!N" & j + 1 & ":" & "N" & k & "),0)"
+    Range("N" & j).Formula = Replace(Range("K" & j).Formula, "K", "N")
     Range("N" & j).Interior.ColorIndex = 34
         
     Sheets("Proposal").Activate
@@ -1796,7 +1835,7 @@ flagStartLightNo:
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Controls("Light" & P(1, X) & "Name").Value
     Range("G" & configuratorTableRow).Formula = installL1
-    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "J")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -1853,10 +1892,10 @@ flagStartLightNo:
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
     
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -1878,7 +1917,7 @@ flagStartLightNo:
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
             
     Range("R" & whatIfStartRow) = Controls("Light" & P(1, X) & "Name").Value
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
     
     Sheets("Proposal").Activate
@@ -2296,47 +2335,56 @@ flagStartPendantNo:
                 End If
             Next j
         Next I
-        
-        'Auto include certain line items if specified accessory is selected
-        For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
-            If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
-                For k = pendantRow + 1 To lastRow
-                    If Range("A" & k).Value = "2031VA" Then
-                        Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                        Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    End If
-                Next k
-                
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
-                For k = pendantRow + 1 To lastRow
-                    If Range("A" & k).Value = "YY104328-01" Then
-                        Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                        Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    End If
-                Next k
-                
-            'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
-            ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 150 mm Drop Tube" Then
-            
-                For k = pendantRow + 1 To lastRow
-                    'Mount adaptor
-                    If Range("A" & k).Value = "LH-MNT-KNL-MIRA" Then
-                        Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-
-                    'Cable
-                    ElseIf Range("A" & k).Value = "L-MLED-CBLE-1" Then
-                        Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                        Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    End If
-                Next k
-            End If
-        Next j
 
     'Pendant Tandem
     ElseIf Controls("Pendant" & P(1, X) & "StdICU").Value = True Or Controls("Pendant" & P(1, X) & "T").Value = True Or Controls("Pendant" & P(1, X) & "ICU").Value = True Or Controls("Pendant" & P(1, X) & "PLP").Value = True Then
         Call PendantTandemTab
     End If
+    
+    'Auto include certain line items if specified accessory is selected - for both Solo and Tandem
+    For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
+        If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
+            For k = pendantRow + 1 To lastRow
+                If Range("A" & k).Value = "2031VA" Then
+                    Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                    Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                End If
+            Next k
+            
+        ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
+            For k = pendantRow + 1 To lastRow
+                If Range("A" & k).Value = "YY104328-01" Then
+                    Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
+                    Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                End If
+            Next k
+            
+        'If knuckle mount light is chosen (Mira 70/110 or Vega 80), auto include the mount adaptor and cable
+        ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 150 mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 300mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 500mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 300mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 500mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 300 mm Drop Tube" _
+        Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 500 mm Drop Tube" _
+        Then
+        
+            For k = pendantRow + 1 To lastRow
+                'Mount adaptor
+                If Range("A" & k).Value = "LH-MNT-KNL-MIRA" Then
+                    Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                    Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                
+                'Cable
+                ElseIf Range("A" & k).Value = "L-MLED-CBLE-1" Then
+                    Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
+                    Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
+                End If
+            Next k
+        End If
+    Next j
     
     I = pendantRow
     
@@ -2353,7 +2401,7 @@ flagStartPendantNo:
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Controls("Pendant" & P(1, X) & "Name").Value
     Range("G" & configuratorTableRow).Formula = installP1
-    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "J")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -2412,10 +2460,10 @@ flagStartPendantNo:
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
     
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -2437,7 +2485,7 @@ flagStartPendantNo:
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
             
     Range("R" & whatIfStartRow) = Controls("Pendant" & P(1, X) & "Name").Value
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
         
     Sheets("Proposal").Activate
@@ -2740,42 +2788,6 @@ For I = firstConsole2Row To lastConsole2Row
         Range("C" & I).Value = CInt(Controls("Earth_P" & P(1, X) & "Con2").Value)
     End If
 Next I
-
-'Auto include certain line items if specified accessory is selected
-For j = 0 To Controls("Pendant" & P(1, X) & "AccSel").ListCount - 1
-    If Controls("Pendant" & P(1, X) & "AccSel").List(j) = "LED Night Light Assembly for 315mm x 230mm Console (without switch)" Then
-        For k = pendantRow + 1 To lastRow
-            If Range("A" & k).Value = "2031VA" Then
-                Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            End If
-        Next k
-                
-    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Cable Support Arm" Then
-        For k = pendantRow + 1 To lastRow
-            If Range("A" & k).Value = "YY104328-01" Then
-                Range("E" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY
-                Range("C" & k).Value = CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            End If
-        Next k
-                
-    'If knuckle mount light is chosen (Mira 70 or Vega 80), auto include the mount adaptor and cable
-    ElseIf Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 70, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Mira LED 110, Knuckle Mount, Single, Extended Arm, 150mm Drop Tube" Or Controls("Pendant" & P(1, X) & "AccSel").List(j) = "Vega 80 LED, Knuckle Mount, Single, Extended Arm, 150 mm Drop Tube" Then
-            
-        For k = pendantRow + 1 To lastRow
-            'Mount adaptor
-            If Range("A" & k).Value = "LH-MNT-KNL-MIRA" Then
-                Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-                    
-            'Cable
-            ElseIf Range("A" & k).Value = "L-MLED-CBLE-1" Then
-                Range("E" & k).Value = Range("E" & k).Value + (CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value) * pendantQTY)
-                Range("C" & k).Value = Range("C" & k).Value + CInt(Controls("P" & P(1, X) & "_Acc_Qty" & j).Value)
-            End If
-        Next k
-    End If
-Next j
 End Sub
 
 'Amico Accessories for Save button
@@ -2921,10 +2933,10 @@ Unprotect
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
     
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -2946,7 +2958,7 @@ Unprotect
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
             
     Range("R" & whatIfStartRow).Formula = "=Proposal!B" & I
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
     
     Sheets("Proposal").Activate
@@ -3222,7 +3234,7 @@ Private Sub AFICTab()
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Range("B" & I).Value
     Range("G" & configuratorTableRow).Formula = installIF1
-    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "J")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -3263,10 +3275,10 @@ Private Sub AFICTab()
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
     
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -3288,7 +3300,7 @@ Private Sub AFICTab()
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
             
     Range("R" & whatIfStartRow) = "=Proposal!B" & I
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
         
     Sheets("Proposal").Activate
@@ -3333,9 +3345,6 @@ Unprotect
             .Range("F" & I).Value = ""
         Next I
         For I = firstConfigDICableRow To lastConfigDICableRow
-            .Range("F" & I).Value = ""
-        Next I
-        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
             .Range("F" & I).Value = ""
         Next I
         
@@ -3390,13 +3399,6 @@ Unprotect
             Next j
         Next I
         For I = firstConfigDICableRow To lastConfigDICableRow
-            For j = 0 To Controls("DI_Sel").ListCount - 1
-                If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
-                    .Range("F" & I).Value = CInt(Controls("DI_Qty" & j).Value)
-                End If
-            Next j
-        Next I
-        For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
             For j = 0 To Controls("DI_Sel").ListCount - 1
                 If .Range("B" & I).Value = Controls("DI_Sel").List(j) Then
                     .Range("F" & I).Value = CInt(Controls("DI_Qty" & j).Value)
@@ -3508,7 +3510,7 @@ Unprotect
     'Fill in the rest of the columns
     Range("B" & configuratorTableRow).Value = Range("B" & I).Value
     Range("G" & configuratorTableRow).Formula = installI1
-    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "K")
+    Range("H" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "J")
     Range("E" & configuratorTableRow).Formula = Replace(Range("G" & configuratorTableRow).Formula, "F", "G")
     Range("F" & configuratorTableRow).Formula = "=G" & I
     
@@ -3548,10 +3550,10 @@ Unprotect
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
     
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -3573,7 +3575,7 @@ Unprotect
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
     
     Range("R" & whatIfStartRow) = "=Proposal!B" & I
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
         
     Sheets("Proposal").Activate
@@ -3722,10 +3724,10 @@ Unprotect
     Range("F" & j).Formula = "=Proposal!D" & I
     Range("G" & j).Formula = "=Proposal!F" & I
     Range("H" & j).Formula = "=Proposal!G" & I
-    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
-    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
-    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
-    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!M" & I + 1 & ":" & "M" & lastRow & "),0)"
+    Range("K" & j).Formula = "=IFERROR(SUM(Proposal!I" & I + 1 & ":" & "I" & lastRow & "),0)"
+    Range("L" & j).Formula = "=IFERROR(SUM(Proposal!J" & I + 1 & ":" & "J" & lastRow & "),0)"
+    Range("M" & j).Formula = "=IFERROR(SUM(Proposal!K" & I + 1 & ":" & "K" & lastRow & "),0)"
+    Range("N" & j).Formula = "=IFERROR(SUM(Proposal!L" & I + 1 & ":" & "L" & lastRow & "),0)"
             
     'Add the What-If table at Tables worksheet
     With Sheets("Tables")
@@ -3745,10 +3747,25 @@ Unprotect
     Range("Q" & whatIfStartRow).Font.ColorIndex = 1
                 
     Range("R" & whatIfStartRow).Formula = "=Proposal!B" & I
-    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AD" & I + 1 & ":" & "AD" & lastRow & "),0)"
+    Range("S" & whatIfStartRow).Formula = "=IFERROR(SUM(Proposal!AC" & I + 1 & ":" & "AC" & lastRow & "),0)"
     Range("T" & whatIfStartRow).Formula = "=IFERROR(Proposal!G" & I & ",0)"
                 
     Sheets("Proposal").Activate
+End Sub
+'
+'PNote for Save button
+'
+Private Sub PNoteTab()
+
+Unprotect
+    
+    'Store user inputs into Configurator worksheet to be loaded when the Configurator is used next time
+    'Also to be exported to BOM for Project/Ops team
+    With Sheets("Configurator")
+        
+        'Fill in the PNote content
+        .Range("PNoteRm4").Value = Controls("PNoteContent").Value
+    End With
 End Sub
 '
 'Show/hide tabs for Lights
@@ -3772,8 +3789,20 @@ Private Sub LightNo_Change()
     End If
 End Sub
 'Spin button for QTY of light configurations
-Private Sub LightSpin_Change()
-    LightNo.Text = LightSpin.Value
+Private Sub LightSpin_SpinUp()
+    If LightNo.Value + 1 > 5 Then
+        LightNo.Text = 5
+    Else
+        LightNo.Text = LightNo.Value + 1
+    End If
+End Sub
+'Spin button for QTY of light configurations
+Private Sub LightSpin_SpinDown()
+    If LightNo.Value - 1 < 0 Then
+        LightNo.Text = 0
+    Else
+        LightNo.Text = LightNo.Value - 1
+    End If
 End Sub
 '
 'Show/hide tabs for pendants
@@ -3797,8 +3826,20 @@ Private Sub PendantNo_Change()
     End If
 End Sub
 'Spin button for QTY of pendant configurations
-Private Sub PendantSpin_Change()
-    PendantNo.Text = PendantSpin.Value
+Private Sub PendantSpin_SpinUp()
+    If PendantNo.Value + 1 > 5 Then
+        PendantNo.Text = 5
+    Else
+        PendantNo.Text = PendantNo.Value + 1
+    End If
+End Sub
+'Spin button for QTY of pendant configurations
+Private Sub PendantSpin_SpinDown()
+    If PendantNo.Value - 1 < 0 Then
+        PendantNo.Text = 0
+    Else
+        PendantNo.Text = PendantNo.Value - 1
+    End If
 End Sub
 '
 'ComboBox for Description
@@ -4224,8 +4265,8 @@ Private Sub EQPendantOptions(productInt As Integer)
     Controls("Pendant" & productInt & "Description") = "Std EQ"
 
     'Specified accessories
-    Controls("Pendant" & productInt & "AccSel").AddItem "Console LT Shelf 457mm (w) x 585mm (d) w Front Handle"
-    Controls("Pendant" & productInt & "AccSel").AddItem "Console LT Shelf 457mm (w) x 585mm (d) w Side Rails"
+    Controls("Pendant" & productInt & "AccSel").AddItem "Shelf, LT w Front Handle - 457mm (w) x 585mm (d)"
+    Controls("Pendant" & productInt & "AccSel").AddItem "Shelf, LT w Side Rails - 457mm (w) x 585mm (d)"
     Controls("P" & productInt & "_Acc_Qty0").Value = "1"
     Controls("P" & productInt & "_Acc_Qty1").Value = "2"
 End Sub
@@ -4884,11 +4925,20 @@ Private Sub SlingNo_Click()
     SlingFrame.Visible = False
 End Sub
 '
+'PNote Yes/No Options
+'
+Private Sub PNoteYes_Click()
+    PNoteContent.Visible = True
+End Sub
+Private Sub PNoteNo_Click()
+    PNoteContent.Visible = False
+End Sub
+'
 'Name changes tab for the specific page
 'Room Section
 'Room 2
-Private Sub Room2Name_Change()
-    RoomLabel.Caption = Controls("Room2Name").Value
+Private Sub Room4Name_Change()
+    RoomLabel.Caption = Controls("Room4Name").Value
 End Sub
 
 'Light Section
@@ -5628,18 +5678,6 @@ Private Sub FibreCabling_Add_Click()
     Next I
 End Sub
 
-'Listbox 9
-Private Sub OnceOff_DI_Add_Click()
-    For I = 0 To OnceOff_DI.ListCount - 1
-        If OnceOff_DI.Selected(I) = True Then DI_Sel.AddItem OnceOff_DI.List(I)
-    Next I
-                
-    'Deselect after add
-    For I = 0 To OnceOff_DI.ListCount - 1
-        OnceOff_DI.Selected(I) = False
-    Next I
-End Sub
-
 Private Sub DI_Remove_Click()
 
     counter = 0
@@ -5755,6 +5793,9 @@ Call DICategory
 
 'Check if any Slings have been configured
 Call SlingCategory
+
+'Check if PNote has been configured
+Call PNoteCategory
 
 Call OptimizeCode_End
 
@@ -5889,11 +5930,11 @@ Private Sub LightCategory()
                     
         'Mira 70/110
         Set FindFirstMiraRow = .Range("B:B").Find(What:="MIRA 70/110", LookIn:=xlValues)
-        Set FindLastMiraRow = .Range("B:B").Find(What:="Parts", LookIn:=xlValues)
+        Set FindLastMiraRow = .Range("B:B").Find(What:="L-MLED110-FS-XX-EX", LookIn:=xlValues)
                     
         'Vega 80
         Set FindFirstVegaRow = .Range("B:B").Find(What:="VEGA 80", LookIn:=xlValues)
-        Set FindLastVegaRow = .Range("B:B").Find(What:="MIRA 70/110", LookIn:=xlValues)
+        Set FindLastVegaRow = .Range("B:B").Find(What:="L-VLED80-FS-XX-EX", LookIn:=xlValues)
     
         'First and last row
         firstSingleArmRow = FindFirstSingleArmRow.Row + 1
@@ -5909,9 +5950,9 @@ Private Sub LightCategory()
         firstMSLRow = FindFirstMSLRow.Row + 1
         lastMSLRow = FindLastMSLRow.Row - 1
         firstMiraRow = FindFirstMiraRow.Row + 1
-        lastMiraRow = FindLastMiraRow.Row - 1
+        lastMiraRow = FindLastMiraRow.Row
         firstVegaRow = FindFirstVegaRow.Row + 1
-        lastVegaRow = FindLastVegaRow.Row - 1
+        lastVegaRow = FindLastVegaRow.Row
         
         'Dimension of SingleArm array
         size = lastSingleArmRow - firstSingleArmRow + 1
@@ -6113,7 +6154,6 @@ Private Sub PendantCategory()
     
     'Initialize TextBoxes
         Controls("Pendant" & P(1, X) & "No").Value = .Range("P" & P(1, X) & "Rm4Qty")
-        Controls("Pendant" & P(1, X) & "Description").Value = .Range("P" & P(1, X) & "Rm4Desc")
         
     'Initialize Options
         If .Range("P" & P(1, X) & "Rm4Type") = "Solo" Then
@@ -6133,6 +6173,7 @@ Private Sub PendantCategory()
         End If
         
         Controls("Pendant" & P(1, X) & "Name").Value = .Range("P" & P(1, X) & "Rm4Name")
+        Controls("Pendant" & P(1, X) & "Description").Value = .Range("P" & P(1, X) & "Rm4Desc")
         
         'Console 1
         If .Range("P" & P(1, X) & "Rm4Con1ArmSingle") = False And .Range("P" & P(1, X) & "Rm4Con1ArmDual") = True Then
@@ -6633,9 +6674,6 @@ With Sheets("Configurator")
 
     Set FindFirstConfigDICableRow = .Range("B:B").Find(What:="Fibre Trunk Cabling", LookIn:=xlValues)
     Set FindLastConfigDICableRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
-    
-    Set FindFirstConfigDIOnceOffRow = .Range("B:B").Find(What:="Once Off per Facility", LookIn:=xlValues)
-    Set FindLastConfigDIOnceOffRow = .Range("B:B").Find(What:="End_DI", LookIn:=xlValues)
 
     'First and last row for Surgical Monitor
     firstConfigDISMRow = FindFirstConfigDISMRow.Row + 1
@@ -6668,10 +6706,6 @@ With Sheets("Configurator")
     'First and last row for Fibre Trunk Cabling
     firstConfigDICableRow = FindFirstConfigDICableRow.Row + 1
     lastConfigDICableRow = FindLastConfigDICableRow.Row - 1
-    
-    'First and last row for Once Off per Facility
-    firstConfigDIOnceOffRow = FindFirstConfigDIOnceOffRow.Row + 1
-    lastConfigDIOnceOffRow = FindLastConfigDIOnceOffRow.Row - 2
 
     'Add the relevant rows into the listboxes
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDISMRow & ":" & "B" & lastConfigDISMRow)
@@ -6704,10 +6738,6 @@ With Sheets("Configurator")
     
     For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDICableRow & ":" & "B" & lastConfigDICableRow)
         FibreCabling.AddItem Cell.Value
-    Next Cell
-    
-    For Each Cell In Worksheets("Configurator").Range("B" & firstConfigDIOnceOffRow & ":" & "B" & lastConfigDIOnceOffRow)
-        OnceOff_DI.AddItem Cell.Value
     Next Cell
     
     counter = 0
@@ -6782,15 +6812,6 @@ With Sheets("Configurator")
             counter = counter + 1
         End If
     Next I
-        
-    For I = firstConfigDIOnceOffRow To lastConfigDIOnceOffRow
-        'Add non-zero quantity Once Off per facility items into the Selected listbox, and its quantity into the relevant textbox
-        If .Range("F" & I).Value > 0 And .Range("F" & I).Value <> "" Then
-            Controls("DI_Sel").AddItem .Range("B" & I).Value
-            Controls("DI_Qty" & counter).Value = .Range("F" & I).Value
-            counter = counter + 1
-        End If
-    Next I
 End With
 
 'Initialize checkboxes
@@ -6833,6 +6854,26 @@ End With
 
 'Initialize checkboxes
 Controls("SlingCBox2").Value = False
+End Sub
+
+Private Sub PNoteCategory()
+
+With Sheets("Configurator")
+
+    'Hide/Unhide Amico Accessories objects
+    If .Range("PNoteOptionRm4").Value = True Then
+        Controls("PNoteYes").Value = True
+        Controls("PNoteNo").Value = False
+    Else
+        Controls("PNoteYes").Value = False
+        Controls("PNoteNo").Value = True
+    End If
+
+    'Add non-blank content add into the textbox
+    If .Range("PNoteRm4").Value <> "" Then
+        Controls("PNoteContent").Value = .Range("PNoteRm4").Value
+    End If
+End With
 End Sub
 
 '
@@ -7053,6 +7094,12 @@ Private Sub ClearButtonSling_Inactive_MouseMove(ByVal Button As Integer, ByVal S
     OKButtonInactive.Visible = True
     ClearButtonSling_Inactive.Visible = False
 End Sub
+Private Sub ClearButtonPNote_Inactive_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
+'PURPOSE: Make Clear Button appear Blue when hovered on
+    CancelButtonInactive.Visible = True
+    OKButtonInactive.Visible = True
+    ClearButtonPNote_Inactive.Visible = False
+End Sub
 Private Sub Userform_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, ByVal X As Single, ByVal Y As Single)
 'PURPOSE: Reset Userform buttons to Inactive Status
     CancelButtonInactive.Visible = True
@@ -7073,4 +7120,5 @@ Private Sub Userform_MouseMove(ByVal Button As Integer, ByVal Shift As Integer, 
     ClearButtonAFIC_Inactive.Visible = True
     ClearButtonInt_Inactive.Visible = True
     ClearButtonSling_Inactive.Visible = True
+    ClearButtonPNote_Inactive.Visible = True
 End Sub
